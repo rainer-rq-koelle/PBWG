@@ -24,6 +24,21 @@ logic.
 - Initial workflow: read extract, decode source fields, harmonise structure,
   apply project-specific preparation, write output files
 
+## Implemented Outputs
+
+The package currently supports these output families:
+
+- NM network traffic
+- APDF airport traffic
+- APDF punctuality
+- APDF throughput / capacity analytics
+
+The next planned airport-focused outputs are:
+
+- taxi-in and taxi-out additional time
+- arrival additional time in terminal airspace (`ASMA`)
+- departure additional time in terminal airspace (`DSMA`)
+
 ## Naming Principles
 
 - Tibble column names are kept in upper case, for example `ADEP`, `ADES`,
@@ -32,6 +47,27 @@ logic.
   `reference_times`
 - Output file names should encode the product family, relevant year or year
   range, and optional variant information
+
+## Canonical and Derived Files
+
+The package follows a two-stage output strategy:
+
+- canonical annual files are written first
+- project files are derived by combining the canonical files that are needed
+
+This reduces reprocessing and makes it easier to handle changing airport sets
+across projects.
+
+Current naming patterns include:
+
+- network annual: `PBWG-EUR-network-traffic-YYYY.csv`
+- network multi-year: `PBWG-EUR-network-traffic-YYYY-YYYY.csv`
+- airport traffic annual: `PBWG-EUR-ICAO-tfc-YYYY.csv`
+- airport traffic multi-year: `PBWG-EUR-ICAO-tfc-YYYY-YYYY.csv`
+- punctuality annual: `PBWG-EUR-ICAO-punc-YYYY.csv`
+- punctuality project aggregate: `PBWG-EUR-punc-YYYY.csv`
+- throughput annual: `PBWG-EUR-ICAO-thru-analytic-YYYY.csv`
+- throughput project aggregate: `PBWG-EUR-thru-analytic-YYYY.csv`
 
 ## Data Dictionary Layer
 
@@ -47,9 +83,9 @@ two purposes:
 1. Confirm the source extract version, coverage period, and aerodromes.
 2. Read the extracted files into R.
 3. Decode source column names to harmonised names.
-4. Run the relevant preparation steps for network or airport products.
+4. Build canonical annual output files for the relevant product family.
 5. Validate row counts, date ranges, and key fields.
-6. Write project-ready outputs using the agreed naming convention.
+6. Combine canonical files into the project-level outputs that are needed.
 7. Record noteworthy assumptions, anomalies, or manual decisions.
 
 ## Operational Notes
@@ -66,3 +102,4 @@ two purposes:
 - quality checks by product family
 - reference-time dataset versioning and naming rules
 - project-specific output inventories
+- examples of canonical-to-project build chains
