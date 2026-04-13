@@ -4,10 +4,7 @@
 \alias{is_ectrl_member_state_airport}
 \title{Check Whether Airports Match the EUROCONTROL Member State Pattern}
 \usage{
-is_ectrl_member_state_airport(
-  icao_vec,
-  icao_pattern = "^(BI|E.|L.|UD|UG|GM|UK|GC)"
-)
+is_ectrl_member_state_airport(icao_vec, icao_pattern = NULL)
 }
 \arguments{
 \item{icao_vec}{Character vector of ICAO airport indicators.}

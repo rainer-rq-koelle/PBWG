@@ -30,14 +30,37 @@ nm_flights_dictionary <- function() {
 #' @export
 apdf_dictionary <- function() {
   tibble::tibble(
-    SOURCE_NAME = c("AERODROME", "FLIGHT_DATE", "MOVEMENT_TYPE", "ATOT", "ALDT"),
-    TARGET_NAME = c("AERODROME", "FLIGHT_DATE", "MOVEMENT_TYPE", "ATOT", "ALDT"),
+    SOURCE_NAME = c(
+      "AP_C_FLTID", "ADEP_ICAO", "ADES_ICAO", "AP_C_REG", "ARCTYP",
+      "AC_CLASS", "AP_C_RWY", "AP_C_STND", "MVT_TIME_UTC", "BLOCK_TIME_UTC",
+      "SCHED_TIME_UTC", "C40_CROSS_TIME", "C40_BEARING", "C100_CROSS_TIME",
+      "C100_BEARING", "SRC_PHASE", "IM_SAMAD_ID", "SRC_AIRPORT"
+    ),
+    TARGET_NAME = c(
+      "FLTID", "ADEP", "ADES", "REG", "ARCTYP",
+      "CLASS", "RWY", "STND", "MVT_TIME", "BLOCK_TIME",
+      "SCHED_TIME", "C40_CROSS_TIME", "C40_BEARING", "C100_CROSS_TIME",
+      "C100_BEARING", "PHASE", "SAMAD_ID", "AERODROME"
+    ),
     DESCRIPTION = c(
-      "Airport ICAO indicator",
-      "Flight operation date",
-      "Arrival or departure movement type",
-      "Actual take-off time",
-      "Actual landing time"
+      "Flight identifier",
+      "Departure aerodrome ICAO indicator",
+      "Arrival aerodrome ICAO indicator",
+      "Aircraft registration",
+      "Aircraft type",
+      "Wake or aircraft class",
+      "Runway",
+      "Stand",
+      "Movement time in UTC",
+      "Block time in UTC",
+      "Scheduled time in UTC",
+      "Forty nautical mile crossing time",
+      "Forty nautical mile crossing bearing",
+      "One hundred nautical mile crossing time",
+      "One hundred nautical mile crossing bearing",
+      "Arrival or departure phase",
+      "Associated SAMAD identifier",
+      "Airport ICAO indicator"
     )
   )
 }

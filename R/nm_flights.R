@@ -42,9 +42,9 @@ read_nm_flights_zip <- function(zipped_archive_path, files = NULL, type = c("par
 #' @export
 is_ectrl_member_state_airport <- function(
     icao_vec,
-    icao_pattern = "^(BI|E.|L.|UD|UG|GM|UK|GC)"
+    icao_pattern = NULL
 ) {
-  stringr::str_detect(string = icao_vec, pattern = icao_pattern)
+  is_eurocontrol_airport(icao_vec)
 }
 
 #' Prepare PBWG Regional Traffic from NM Flight Data
