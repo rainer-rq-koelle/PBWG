@@ -1,0 +1,37 @@
+Package: PBWG
+Title: Data Preparation for International ANS Performance Benchmarking
+Version: 0.0.0.9000
+Authors@R: 
+    person(
+      given = "Rainer",
+      family = "Koelle",
+      role = c("aut", "cre"),
+      email = "rainer.koelle+pbwg@example.com"
+    )
+Description: Provides a tidyverse-oriented workflow for reading,
+    decoding, harmonising, and preparing extracted data used in
+    international operational ANS performance benchmarking projects.
+    The package is designed to start from warehouse extracts and later
+    accommodate alternative interfaces such as SQL queries or data
+    platform connectors.
+License: Unlicense + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: 
+    R (>= 4.2.0)
+Imports:
+    dplyr,
+    fs,
+    lubridate,
+    purrr,
+    readr,
+    rlang,
+    stringr,
+    tibble
+Suggests:
+    arrow,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
