@@ -104,7 +104,7 @@ add_delay_and_dlygrp <- function(
 #' Aggregates APDF data with delay groups to daily airport-phase punctuality
 #' distributions using ordered delay-group columns.
 #'
-#' @param punc_with_dly A tibble containing `AERODROME`, `BLOCK_TIME`, `PHASE`,
+#' @param punc_with_dly A tibble containing `ICAO`, `BLOCK_TIME`, `PHASE`,
 #'   and `DLY_GRP`.
 #' @param group_labels Ordered delay-group labels. Defaults to the output of
 #'   `pbwg_punctuality_groups()`.
@@ -117,8 +117,9 @@ package_pbwg_punctuality <- function(
 ) {
   stop_if_apdf_columns_missing(
     punc_with_dly,
-    required_columns = c("AERODROME", "BLOCK_TIME", "PHASE", "DLY_GRP")
+    required_columns = c("ICAO", "BLOCK_TIME", "PHASE", "DLY_GRP")
   )
+  assert_single_apdf_icao(punc_with_dly, what = "package_pbwg_punctuality() input")
 
   tibble::as_tibble(punc_with_dly) |>
     dplyr::mutate(
@@ -126,10 +127,10 @@ package_pbwg_punctuality <- function(
       COUNT = 1L,
       DLY_GRP = factor(.data$DLY_GRP, levels = group_labels)
     ) |>
-    dplyr::group_by(.data$AERODROME, .data$DATE, .data$PHASE, .data$DLY_GRP) |>
+    dplyr::group_by(.data$ICAO, .data$DATE, .data$PHASE, .data$DLY_GRP) |>
     dplyr::summarise(COUNT = sum(.data$COUNT), .groups = "drop") |>
     tidyr::pivot_wider(
-      id_cols = c("AERODROME", "DATE", "PHASE"),
+      id_cols = c("ICAO", "DATE", "PHASE"),
       names_from = "DLY_GRP",
       values_from = "COUNT",
       values_fill = 0
@@ -205,7 +206,7 @@ prepare_apdf_punctuality_zip <- function(
     }
   ) |>
     dplyr::bind_rows() |>
-    dplyr::arrange(.data$AERODROME, .data$DATE, .data$PHASE)
+    dplyr::arrange(.data$ICAO, .data$DATE, .data$PHASE)
 }
 
 #' Build a PBWG Punctuality File Name
@@ -261,10 +262,9 @@ write_pbwg_punctuality <- function(data, year, output_dir, airport = NULL, regio
   output_data <- tibble::as_tibble(data)
 
   if (!base::is.null(airport)) {
-    output_data <- dplyr::filter(output_data, .data$AERODROME %in% airport)
+    output_data <- dplyr::filter(output_data, .data$ICAO %in% airport)
   }
 
-  output_data <- dplyr::rename(output_data, ICAO = "AERODROME")
   readr::write_csv(output_data, output_path)
 
   invisible(output_path)
@@ -313,10 +313,10 @@ create_pbwg_punctuality_annual_file <- function(
   )
 
   if (!base::is.null(airports)) {
-    summary_data <- dplyr::filter(summary_data, .data$AERODROME %in% airports)
+    summary_data <- dplyr::filter(summary_data, .data$ICAO %in% airports)
   }
 
-  airports_to_write <- unique(summary_data$AERODROME)
+  airports_to_write <- unique(summary_data$ICAO)
 
   purrr::map_chr(
     airports_to_write,
@@ -408,7 +408,7 @@ combine_pbwg_punctuality_project <- function(
     dplyr::arrange(.data$ICAO, .data$DATE, .data$PHASE)
 
   write_pbwg_punctuality(
-    data = dplyr::rename(combined_data, AERODROME = "ICAO"),
+    data = combined_data,
     year = years,
     output_dir = output_dir,
     airport = NULL,
@@ -480,7 +480,7 @@ ensure_punctuality_columns <- function(data, group_labels) {
     data[missing_columns] <- 0L
   }
 
-  dplyr::select(data, dplyr::all_of(c("AERODROME", "DATE", "PHASE", group_labels)))
+  dplyr::select(data, dplyr::all_of(c("ICAO", "DATE", "PHASE", group_labels)))
 }
 
 stop_if_invalid_delay_grid <- function(positive_upper, negative_lower, step) {

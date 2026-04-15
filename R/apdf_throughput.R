@@ -9,25 +9,11 @@
 #' @return A tibble with airport, bin, arrivals, departures, and total flights.
 #' @export
 calc_throughput <- function(apdf, unit = "hour") {
-  if ("AERODROME" %in% names(apdf)) {
-    required_columns <- c("AERODROME", "PHASE", "MVT_TIME")
-  } else {
-    required_columns <- c("ADEP", "ADES", "PHASE", "MVT_TIME")
-  }
-
-  stop_if_apdf_columns_missing(apdf, required_columns = required_columns)
+  stop_if_apdf_columns_missing(apdf, required_columns = c("ICAO", "PHASE", "MVT_TIME"))
+  assert_single_apdf_icao(apdf, what = "calc_throughput() input")
 
   tibble::as_tibble(apdf) |>
     dplyr::mutate(
-      ICAO = if ("AERODROME" %in% names(apdf)) {
-        .data$AERODROME
-      } else {
-        dplyr::case_when(
-          .data$PHASE %in% "ARR" ~ .data$ADES,
-          .data$PHASE %in% "DEP" ~ .data$ADEP,
-          .default = NA_character_
-        )
-      },
       BIN = lubridate::floor_date(.data$MVT_TIME, unit = unit)
     ) |>
     dplyr::summarise(

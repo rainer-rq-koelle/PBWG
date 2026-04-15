@@ -10,7 +10,7 @@ package_pbwg_punctuality(
 )
 }
 \arguments{
-\item{punc_with_dly}{A tibble containing \code{AERODROME}, \code{BLOCK_TIME}, \code{PHASE},
+\item{punc_with_dly}{A tibble containing \code{ICAO}, \code{BLOCK_TIME}, \code{PHASE},
 and \code{DLY_GRP}.}
 
 \item{group_labels}{Ordered delay-group labels. Defaults to the output of

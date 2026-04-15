@@ -17,13 +17,13 @@ test_that("decode_nm_flights renames columns based on dictionary", {
 
 test_that("decode_apdf keeps unmapped columns", {
   apdf <- tibble::tibble(
-    AERODROME = "EGLL",
+    ICAO = "EGLL",
     LOCAL_FIELD = 1
   )
 
   decoded <- decode_apdf(apdf)
 
-  expect_named(decoded, c("AERODROME", "LOCAL_FIELD"))
+  expect_named(decoded, c("ICAO", "LOCAL_FIELD"))
 })
 
 test_that("decode functions reject duplicate source names", {
