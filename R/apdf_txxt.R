@@ -9,7 +9,7 @@ apdf_txxt_fields <- function() {
     "ADEP_ICAO", "ADES_ICAO",
     "AP_C_RWY", "AP_C_STND",
     "MVT_TIME_UTC", "BLOCK_TIME_UTC",
-    "SRC_PHASE", "SRC_AIRPORT"
+    "SRC_PHASE"
   )
 }
 
@@ -48,7 +48,7 @@ prepare_apdf_txxt_input <- function(
   apdf |>
     trim_apdf(fields = fields) |>
     decode_apdf(dictionary = dictionary) |>
-    ensure_apdf_icao()
+    derive_apdf_icao()
 }
 
 #' Prepare Taxi-Time Samples from APDF Data
@@ -1034,18 +1034,6 @@ prepare_apdf_txxt_reference_input_from_zip <- function(
   ) |>
     dplyr::bind_rows() |>
     dplyr::arrange(.data$ICAO, .data$PHASE, .data$RWY, .data$STND, .data$BLOCK_TIME)
-}
-
-ensure_apdf_icao <- function(data) {
-  if ("ICAO" %in% names(data)) {
-    return(tibble::as_tibble(data))
-  }
-
-  if ("AERODROME" %in% names(data)) {
-    return(dplyr::rename(tibble::as_tibble(data), ICAO = "AERODROME"))
-  }
-
-  rlang::abort("APDF data must contain either ICAO or AERODROME.")
 }
 
 calc_txxt_reference_value <- function(txxt, variant) {

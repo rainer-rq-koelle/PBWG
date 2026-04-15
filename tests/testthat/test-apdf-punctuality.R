@@ -45,7 +45,7 @@ test_that("add_delay_and_dlygrp handles exact positive boundaries like the legac
 
 test_that("package_pbwg_punctuality returns ordered wide output", {
   punc <- tibble::tibble(
-    AERODROME = c("EGLL", "EGLL", "EGLL"),
+    ICAO = c("EGLL", "EGLL", "EGLL"),
     BLOCK_TIME = as.POSIXct(
       c("2025-01-01 10:00:00", "2025-01-01 10:05:00", "2025-01-01 10:10:00"),
       tz = "UTC"
@@ -56,7 +56,7 @@ test_that("package_pbwg_punctuality returns ordered wide output", {
 
   packaged <- package_pbwg_punctuality(punc)
 
-  expect_true(all(c("AERODROME", "DATE", "PHASE", "N_VALID") %in% names(packaged)))
+  expect_true(all(c("ICAO", "DATE", "PHASE", "N_VALID") %in% names(packaged)))
   expect_equal(packaged$N_VALID, 3)
   expect_equal(packaged$`(-5,0]`, 1)
   expect_equal(packaged$`(0,5)`, 1)
@@ -103,7 +103,7 @@ test_that("prepare_apdf_punctuality_zip packages punctuality from zipped APDF in
   )
 
   expect_equal(nrow(punc), 1)
-  expect_equal(punc$AERODROME, "EGLL")
+  expect_equal(punc$ICAO, "EGLL")
   expect_equal(punc$`(0,5)`, 1)
 })
 
@@ -121,7 +121,7 @@ test_that("create and combine PBWG punctuality files work", {
   writeLines(
     c(
       "AP_C_FLTID,ADEP_ICAO,ADES_ICAO,SRC_PHASE,SRC_AIRPORT,BLOCK_TIME_UTC,SCHED_TIME_UTC,MVT_TIME_UTC",
-      "FLT2,LGAV,EDDF,ARR,LGAV,2025-01-01 10:12:00,2025-01-01 10:00:00,2025-01-01 10:12:00"
+      "FLT2,EDDF,LGAV,ARR,LGAV,2025-01-01 10:12:00,2025-01-01 10:00:00,2025-01-01 10:12:00"
     ),
     file.path(tmp_dir, "LGAV_2025.csv")
   )

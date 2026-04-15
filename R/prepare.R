@@ -27,5 +27,5 @@ prepare_airport_data <- function(apdf, airports = NULL) {
     return(apdf)
   }
 
-  dplyr::filter(apdf, .data$AERODROME %in% airports)
+  dplyr::filter(apdf, .data$ICAO %in% airports)
 }

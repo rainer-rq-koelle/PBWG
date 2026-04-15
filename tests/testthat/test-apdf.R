@@ -12,13 +12,14 @@ test_that("prepare_apdf_traffic_input trims, decodes, and adds DATE", {
 
   prepared <- prepare_apdf_traffic_input(apdf)
 
-  expect_true(all(c("FLTID", "ADEP", "ADES", "CLASS", "PHASE", "AERODROME", "DATE") %in% names(prepared)))
+  expect_true(all(c("ICAO", "FLTID", "ADEP", "ADES", "CLASS", "PHASE", "DATE") %in% names(prepared)))
+  expect_equal(prepared$ICAO, "EGLL")
   expect_equal(prepared$DATE, as.Date("2025-01-01"))
 })
 
 test_that("prepare_apdf_daily_traffic aggregates airport daily counts", {
   apdf <- tibble::tibble(
-    AERODROME = c("EGLL", "EGLL", "EGLL"),
+    ICAO = c("EGLL", "EGLL", "EGLL"),
     DATE = as.Date(c("2025-01-01", "2025-01-01", "2025-01-01")),
     PHASE = c("DEP", "ARR", "DEP"),
     ADEP = c("EGLL", "KJFK", "EGLL"),
@@ -67,7 +68,39 @@ test_that("prepare_apdf_daily_traffic_zip aggregates multiple airport files", {
   )
 
   expect_equal(nrow(summary), 2)
-  expect_true(all(c("EGLL", "LGAV") %in% summary$AERODROME))
+  expect_true(all(c("EGLL", "LGAV") %in% summary$ICAO))
+})
+
+test_that("prepare_apdf_daily_traffic rejects mixed-airport input", {
+  apdf <- tibble::tibble(
+    ICAO = c("EGLL", "LGAV"),
+    DATE = as.Date(c("2025-01-01", "2025-01-01")),
+    PHASE = c("DEP", "DEP"),
+    ADEP = c("EGLL", "LGAV"),
+    ADES = c("KJFK", "EDDF"),
+    CLASS = c("H", "M")
+  )
+
+  expect_error(
+    prepare_apdf_daily_traffic(apdf),
+    "must contain exactly one derived ICAO value"
+  )
+})
+
+test_that("split_apdf_by_icao splits prepared APDF data into airport slices", {
+  apdf <- tibble::tibble(
+    ADEP = c("EGLL", "LGAV"),
+    ADES = c("KJFK", "EDDF"),
+    PHASE = c("DEP", "DEP"),
+    MVT_TIME = as.POSIXct(c("2025-01-01 10:10:00", "2025-01-01 10:20:00"), tz = "UTC"),
+    BLOCK_TIME = as.POSIXct(c("2025-01-01 10:00:00", "2025-01-01 10:05:00"), tz = "UTC")
+  )
+
+  split_data <- split_apdf_by_icao(apdf)
+
+  expect_equal(sort(names(split_data)), c("EGLL", "LGAV"))
+  expect_equal(split_data$EGLL$ICAO, "EGLL")
+  expect_equal(split_data$LGAV$ICAO, "LGAV")
 })
 
 test_that("build_pbwg_airport_traffic_filename supports annual and multi-year files", {

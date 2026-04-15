@@ -1,18 +1,33 @@
 test_that("calc_throughput aggregates movements by airport and time bin", {
   apdf <- tibble::tibble(
-    ADEP = c("EGLL", "EGLL", "LGAV"),
-    ADES = c("LFPG", "EGLL", "LGAV"),
-    PHASE = c("DEP", "ARR", "DEP"),
+    ICAO = c("EGLL", "EGLL"),
+    PHASE = c("DEP", "ARR"),
     MVT_TIME = as.POSIXct(
-      c("2025-01-01 10:03:00", "2025-01-01 10:17:00", "2025-01-01 10:11:00"),
+      c("2025-01-01 10:03:00", "2025-01-01 10:17:00"),
       tz = "UTC"
     )
   )
 
   throughput <- calc_throughput(apdf, unit = "hour")
 
-  expect_equal(nrow(throughput), 2)
-  expect_equal(throughput$FLTS, c(2L, 1L))
+  expect_equal(nrow(throughput), 1)
+  expect_equal(throughput$FLTS, 2L)
+})
+
+test_that("calc_throughput rejects mixed-airport input", {
+  apdf <- tibble::tibble(
+    ICAO = c("EGLL", "LGAV"),
+    PHASE = c("DEP", "DEP"),
+    MVT_TIME = as.POSIXct(
+      c("2025-01-01 10:03:00", "2025-01-01 10:11:00"),
+      tz = "UTC"
+    )
+  )
+
+  expect_error(
+    calc_throughput(apdf, unit = "hour"),
+    "must contain exactly one derived ICAO value"
+  )
 })
 
 test_that("prepare_apdf_throughput_zip packages throughput from zipped APDF input", {
@@ -67,7 +82,7 @@ test_that("create and combine PBWG throughput files work", {
   writeLines(
     c(
       "AP_C_FLTID,ADEP_ICAO,ADES_ICAO,SRC_PHASE,SRC_AIRPORT,MVT_TIME_UTC,BLOCK_TIME_UTC,SCHED_TIME_UTC",
-      "FLT2,LGAV,EDDF,ARR,LGAV,2025-01-01 10:12:00,2025-01-01 10:12:00,2025-01-01 10:00:00"
+      "FLT2,EDDF,LGAV,ARR,LGAV,2025-01-01 10:12:00,2025-01-01 10:12:00,2025-01-01 10:00:00"
     ),
     file.path(tmp_dir, "LGAV_2025.csv")
   )

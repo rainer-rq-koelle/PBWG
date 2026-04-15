@@ -106,6 +106,7 @@ prepare_apdf_traffic_input <- function(
   apdf |>
     trim_apdf(fields = fields) |>
     decode_apdf(dictionary = dictionary) |>
+    derive_apdf_icao() |>
     add_apdf_date()
 }
 
@@ -128,15 +129,16 @@ prepare_apdf_daily_traffic <- function(
 ) {
   stop_if_apdf_columns_missing(
     apdf,
-    required_columns = c("AERODROME", "DATE", "PHASE", "ADEP", "ADES", "CLASS")
+    required_columns = c("ICAO", "DATE", "PHASE", "ADEP", "ADES", "CLASS")
   )
+  assert_single_apdf_icao(apdf, what = "prepare_apdf_daily_traffic() input")
 
   daily_traffic <- tibble::as_tibble(apdf) |>
     dplyr::mutate(
       ADEP_IN_REGION = region_classifier(.data$ADEP),
       ADES_IN_REGION = region_classifier(.data$ADES)
     ) |>
-    dplyr::group_by(.data$AERODROME, .data$DATE) |>
+    dplyr::group_by(.data$ICAO, .data$DATE) |>
     dplyr::summarise(
       ARRS = sum(.data$PHASE %in% "ARR", na.rm = TRUE),
       DEPS = sum(.data$PHASE %in% "DEP", na.rm = TRUE),
@@ -155,7 +157,7 @@ prepare_apdf_daily_traffic <- function(
       CLASS_NA = sum(is.na(.data$CLASS)),
       .groups = "drop"
     ) |>
-    dplyr::arrange(.data$AERODROME, .data$DATE)
+    dplyr::arrange(.data$ICAO, .data$DATE)
 
   if (is.null(year)) {
     return(daily_traffic)
@@ -212,7 +214,7 @@ prepare_apdf_daily_traffic_zip <- function(
     }
   ) |>
     dplyr::bind_rows() |>
-    dplyr::arrange(.data$AERODROME, .data$DATE)
+    dplyr::arrange(.data$ICAO, .data$DATE)
 }
 
 #' Build a PBWG Airport Traffic File Name
@@ -265,7 +267,7 @@ write_pbwg_airport_traffic <- function(data, airport, year, output_dir, region =
   output_path <- fs::path(output_dir, output_name)
 
   output_data <- tibble::as_tibble(data) |>
-    dplyr::filter(.data$AERODROME %in% airport)
+    dplyr::filter(.data$ICAO %in% airport)
 
   readr::write_csv(output_data, output_path)
 
@@ -310,10 +312,10 @@ create_pbwg_airport_traffic_annual_file <- function(
   )
 
   if (!base::is.null(airports)) {
-    summary_data <- dplyr::filter(summary_data, .data$AERODROME %in% airports)
+    summary_data <- dplyr::filter(summary_data, .data$ICAO %in% airports)
   }
 
-  airports_to_write <- unique(summary_data$AERODROME)
+  airports_to_write <- unique(summary_data$ICAO)
 
   purrr::map_chr(
     airports_to_write,
@@ -392,7 +394,7 @@ combine_pbwg_airport_traffic_years <- function(
   }
 
   combined_data <- read_pbwg_airport_traffic_files(annual_paths) |>
-    dplyr::arrange(.data$AERODROME, .data$DATE)
+    dplyr::arrange(.data$ICAO, .data$DATE)
 
   write_pbwg_airport_traffic(
     data = combined_data,
@@ -414,4 +416,69 @@ stop_if_apdf_columns_missing <- function(data, required_columns) {
       )
     )
   }
+}
+
+derive_apdf_icao <- function(apdf, validate_existing = TRUE) {
+  stop_if_apdf_columns_missing(
+    apdf,
+    required_columns = c("ADEP", "ADES", "PHASE")
+  )
+
+  data <- tibble::as_tibble(apdf)
+
+  derived_icao <- dplyr::case_when(
+    data$PHASE %in% "ARR" ~ data$ADES,
+    data$PHASE %in% "DEP" ~ data$ADEP,
+    .default = NA_character_
+  )
+
+  if (validate_existing && "ICAO" %in% names(data)) {
+    mismatched_icao <- !is.na(data$ICAO) & !is.na(derived_icao) & data$ICAO != derived_icao
+
+    if (any(mismatched_icao)) {
+      rlang::abort("Existing ICAO values do not match the ICAO derived from PHASE, ADEP, and ADES.")
+    }
+  }
+
+  dplyr::mutate(data, ICAO = derived_icao, .before = dplyr::everything())
+}
+
+assert_single_apdf_icao <- function(data, what = "APDF input") {
+  stop_if_apdf_columns_missing(data, required_columns = c("ICAO"))
+
+  distinct_icao <- tibble::as_tibble(data) |>
+    dplyr::distinct(.data$ICAO) |>
+    dplyr::filter(!is.na(.data$ICAO)) |>
+    dplyr::pull(.data$ICAO)
+
+  if (base::length(distinct_icao) != 1) {
+    rlang::abort(
+      stringr::str_c(
+        what,
+        " must contain exactly one derived ICAO value. Found: ",
+        stringr::str_flatten(distinct_icao, ", ")
+      )
+    )
+  }
+
+  invisible(distinct_icao)
+}
+
+#' Split Prepared APDF Data by Derived ICAO
+#'
+#' Splits APDF data into one tibble per derived airport ICAO indicator.
+#'
+#' @param apdf A prepared APDF tibble.
+#'
+#' @return A named list of tibbles keyed by `ICAO`.
+#' @export
+split_apdf_by_icao <- function(apdf) {
+  data <- if ("ICAO" %in% names(apdf)) {
+    tibble::as_tibble(apdf)
+  } else {
+    derive_apdf_icao(apdf)
+  }
+
+  split(data, data$ICAO) |>
+    purrr::map(tibble::as_tibble)
 }

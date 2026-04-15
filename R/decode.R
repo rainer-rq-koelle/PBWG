@@ -40,7 +40,7 @@ apdf_dictionary <- function() {
       "FLTID", "ADEP", "ADES", "REG", "ARCTYP",
       "CLASS", "RWY", "STND", "MVT_TIME", "BLOCK_TIME",
       "SCHED_TIME", "C40_CROSS_TIME", "C40_BEARING", "C100_CROSS_TIME",
-      "C100_BEARING", "PHASE", "SAMAD_ID", "AERODROME"
+      "C100_BEARING", "PHASE", "SAMAD_ID", "SRC_AIRPORT"
     ),
     DESCRIPTION = c(
       "Flight identifier",
@@ -60,7 +60,7 @@ apdf_dictionary <- function() {
       "One hundred nautical mile crossing bearing",
       "Arrival or departure phase",
       "Associated SAMAD identifier",
-      "Airport ICAO indicator"
+      "Source airport ICAO indicator from the extract"
     )
   )
 }
