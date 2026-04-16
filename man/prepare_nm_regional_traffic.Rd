@@ -6,7 +6,8 @@
 \usage{
 prepare_nm_regional_traffic(
   nm_flights,
-  airport_classifier = is_ectrl_member_state_airport
+  airport_classifier = is_ectrl_member_state_airport,
+  market_segment_rules = NULL
 )
 }
 \arguments{
@@ -14,9 +15,14 @@ prepare_nm_regional_traffic(
 
 \item{airport_classifier}{Function that classifies ICAO aerodromes as inside
 or outside the target region.}
+
+\item{market_segment_rules}{Optional rules returned by
+\code{read_statfor_market_segment_rules()}. When supplied, daily market-segment
+counts are added to the PBWG output.}
 }
 \value{
-A tibble with daily movement and wake-category summaries.
+A tibble with daily movement, wake-category, and market-segment
+summaries.
 }
 \description{
 Aggregates an NM flight table to daily PBWG-style regional traffic counts.

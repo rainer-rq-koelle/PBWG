@@ -54,12 +54,17 @@ is_ectrl_member_state_airport <- function(
 #' @param nm_flights A decoded NM flight table tibble.
 #' @param airport_classifier Function that classifies ICAO aerodromes as inside
 #'   or outside the target region.
+#' @param market_segment_rules Optional rules returned by
+#'   `read_statfor_market_segment_rules()`. When supplied, daily market-segment
+#'   counts are added to the PBWG output.
 #'
-#' @return A tibble with daily movement and wake-category summaries.
+#' @return A tibble with daily movement, wake-category, and market-segment
+#'   summaries.
 #' @export
 prepare_nm_regional_traffic <- function(
     nm_flights,
-    airport_classifier = is_ectrl_member_state_airport
+    airport_classifier = is_ectrl_member_state_airport,
+    market_segment_rules = NULL
 ) {
   stop_if_nm_columns_missing(
     nm_flights,
@@ -70,7 +75,11 @@ prepare_nm_regional_traffic <- function(
     dplyr::mutate(
       DATE = lubridate::date(.data$LOBT),
       ADEP_IN_REGION = airport_classifier(.data$ADEP),
-      ADES_IN_REGION = airport_classifier(.data$ADES)
+      ADES_IN_REGION = airport_classifier(.data$ADES),
+      MARKET_SEGMENT = classify_nm_market_segment(
+        dplyr::pick(dplyr::everything()),
+        rules = market_segment_rules
+      )
     ) |>
     dplyr::group_by(.data$DATE) |>
     dplyr::summarise(
@@ -84,6 +93,18 @@ prepare_nm_regional_traffic <- function(
       M = sum(.data$WK_TBL_CAT %in% "M", na.rm = TRUE),
       L = sum(.data$WK_TBL_CAT %in% "L", na.rm = TRUE),
       NN = sum(is.na(.data$WK_TBL_CAT)),
+      MAINLINE = sum(.data$MARKET_SEGMENT %in% "Mainline", na.rm = TRUE),
+      LOW_COST = sum(.data$MARKET_SEGMENT %in% "Low-Cost", na.rm = TRUE),
+      REGIONAL = sum(.data$MARKET_SEGMENT %in% "Regional", na.rm = TRUE),
+      CHARTER = sum(.data$MARKET_SEGMENT %in% "Charter", na.rm = TRUE),
+      ALL_CARGO = sum(.data$MARKET_SEGMENT %in% "All-Cargo", na.rm = TRUE),
+      BUSINESS_AVIATION = sum(.data$MARKET_SEGMENT %in% "Business Aviation", na.rm = TRUE),
+      MILITARY = sum(.data$MARKET_SEGMENT %in% "Military", na.rm = TRUE),
+      OTHER_SEGMENT = sum(.data$MARKET_SEGMENT %in% "Other", na.rm = TRUE),
+      MS_NA = sum(is.na(.data$MARKET_SEGMENT)),
+      SCHED = .data$MAINLINE + .data$LOW_COST + .data$REGIONAL,
+      CARGO = .data$ALL_CARGO,
+      OTHER = .data$BUSINESS_AVIATION + .data$MILITARY + .data$OTHER_SEGMENT + .data$MS_NA,
       .groups = "drop"
     )
 }
@@ -101,14 +122,18 @@ prepare_nm_regional_traffic <- function(
 #'   `"csv_auto"`.
 #' @param airport_classifier Function that classifies ICAO aerodromes as inside
 #'   or outside the target region.
+#' @param market_segment_rules Optional rules returned by
+#'   `read_statfor_market_segment_rules()`.
 #'
-#' @return A tibble with daily movement and wake-category summaries.
+#' @return A tibble with daily movement, wake-category, and market-segment
+#'   summaries.
 #' @export
 prepare_nm_regional_traffic_zip <- function(
     zipped_archive_path,
     files = NULL,
     type = c("parquet", "csv", "csv_auto"),
-    airport_classifier = is_ectrl_member_state_airport
+    airport_classifier = is_ectrl_member_state_airport,
+    market_segment_rules = NULL
 ) {
   type <- base::match.arg(type)
 
@@ -130,7 +155,8 @@ prepare_nm_regional_traffic_zip <- function(
 
       prepare_nm_regional_traffic(
         nm_flights = nm_flights,
-        airport_classifier = airport_classifier
+        airport_classifier = airport_classifier,
+        market_segment_rules = market_segment_rules
       )
     }
   ) |>
@@ -138,7 +164,12 @@ prepare_nm_regional_traffic_zip <- function(
     dplyr::group_by(.data$DATE) |>
     dplyr::summarise(
       dplyr::across(
-        c("FLTS", "D", "A", "I", "O", "J", "H", "M", "L", "NN"),
+        c(
+          "FLTS", "D", "A", "I", "O", "J", "H", "M", "L", "NN",
+          "MAINLINE", "LOW_COST", "REGIONAL", "CHARTER", "ALL_CARGO",
+          "BUSINESS_AVIATION", "MILITARY", "OTHER_SEGMENT", "MS_NA",
+          "SCHED", "CARGO", "OTHER"
+        ),
         sum
       ),
       .groups = "drop"
@@ -214,6 +245,8 @@ build_pbwg_network_traffic_filename <- function(years, region = "EUR", ext = "cs
 #' @param region Region label added to the output file name and output data.
 #' @param airport_classifier Function that classifies ICAO aerodromes as inside
 #'   or outside the target region.
+#' @param market_segment_rules Optional rules returned by
+#'   `read_statfor_market_segment_rules()`.
 #'
 #' @return The output file path, invisibly.
 #' @export
@@ -224,13 +257,15 @@ create_pbwg_network_traffic_annual_file <- function(
     files = NULL,
     type = c("parquet", "csv", "csv_auto"),
     region = "EUR",
-    airport_classifier = is_ectrl_member_state_airport
+    airport_classifier = is_ectrl_member_state_airport,
+    market_segment_rules = NULL
 ) {
   summary_data <- prepare_nm_regional_traffic_zip(
     zipped_archive_path = zipped_archive_path,
     files = files,
     type = type,
-    airport_classifier = airport_classifier
+    airport_classifier = airport_classifier,
+    market_segment_rules = market_segment_rules
   ) |>
     dplyr::filter(lubridate::year(.data$DATE) == year)
 

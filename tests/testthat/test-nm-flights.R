@@ -31,10 +31,28 @@ test_that("prepare_nm_regional_traffic aggregates daily traffic counts", {
     ),
     ADEP = c("EGLL", "KJFK", "EGLL"),
     ADES = c("KJFK", "LGAV", "LFPG"),
-    WK_TBL_CAT = c("H", "M", NA_character_)
+    WK_TBL_CAT = c("H", "M", NA_character_),
+    AIRCRAFT_OPERATOR = c("BAW", "UPS", "DLH"),
+    AIRCRAFT_TYPE_ICAO_ID = c("A320", "B748", "E190"),
+    ICAO_FLT_TYPE = c("S", "N", "S"),
+    AIRCRAFT_ID = c("BAW1", "UPS2", "DLH3"),
+    REGISTRATION = c("GBUSY", "N1234", "DTEST")
   )
 
-  summary <- prepare_nm_regional_traffic(nm_flights)
+  rules <- list(
+    low_cost_operators = "EZY",
+    regional_types = "E190",
+    business_types = "F2TH",
+    cargo_rules = tibble::tibble(
+      OPERATOR = "UPS",
+      AC_TYPE = "ALL",
+      CALLSIGN = "ALL",
+      REGISTRATION = "ALL"
+    )
+  ) |>
+    PBWG:::add_prepared_cargo_sets()
+
+  summary <- prepare_nm_regional_traffic(nm_flights, market_segment_rules = rules)
 
   expect_equal(summary$FLTS, 3L)
   expect_equal(summary$D, 1L)
@@ -44,6 +62,49 @@ test_that("prepare_nm_regional_traffic aggregates daily traffic counts", {
   expect_equal(summary$H, 1L)
   expect_equal(summary$M, 1L)
   expect_equal(summary$NN, 1L)
+  expect_equal(summary$MAINLINE, 1L)
+  expect_equal(summary$ALL_CARGO, 1L)
+  expect_equal(summary$REGIONAL, 1L)
+  expect_equal(summary$SCHED, 2L)
+  expect_equal(summary$CARGO, 1L)
+})
+
+test_that("classify_nm_market_segment applies STATFOR-style priorities", {
+  nm_flights <- tibble::tibble(
+    AIRCRAFT_OPERATOR = c("RCH", "ZZZ", "UPS", "EZY", "DLH", "DLH", "ABC", "HOP"),
+    OPERATING_AIRCRAFT_OPERATOR = c(NA, NA, NA, NA, NA, NA, NA, NA),
+    AIRCRAFT_TYPE_ICAO_ID = c("C130", "F2TH", "B748", "A320", "E190", "A320", "A320", "H500"),
+    ICAO_FLT_TYPE = c("M", "G", "N", "S", "S", "S", "N", "N"),
+    AIRCRAFT_ID = c("RCH1", "NJE1", "UPS2", "EZY3", "DLH4", "DLH5", "ABC6", "HOP7"),
+    REGISTRATION = paste0("REG", seq_len(8))
+  )
+
+  rules <- list(
+    low_cost_operators = "EZY",
+    regional_types = "E190",
+    business_types = "F2TH",
+    cargo_rules = tibble::tibble(
+      OPERATOR = "UPS",
+      AC_TYPE = "ALL",
+      CALLSIGN = "ALL",
+      REGISTRATION = "ALL"
+    )
+  ) |>
+    PBWG:::add_prepared_cargo_sets()
+
+  expect_equal(
+    classify_nm_market_segment(nm_flights, rules = rules),
+    c(
+      "Military",
+      "Business Aviation",
+      "All-Cargo",
+      "Low-Cost",
+      "Regional",
+      "Mainline",
+      "Charter",
+      NA_character_
+    )
+  )
 })
 
 test_that("prepare_nm_regional_traffic_zip aggregates multiple archived files", {

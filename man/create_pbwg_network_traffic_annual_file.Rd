@@ -11,7 +11,8 @@ create_pbwg_network_traffic_annual_file(
   files = NULL,
   type = c("parquet", "csv", "csv_auto"),
   region = "EUR",
-  airport_classifier = is_ectrl_member_state_airport
+  airport_classifier = is_ectrl_member_state_airport,
+  market_segment_rules = NULL
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ create_pbwg_network_traffic_annual_file(
 
 \item{airport_classifier}{Function that classifies ICAO aerodromes as inside
 or outside the target region.}
+
+\item{market_segment_rules}{Optional rules returned by
+\code{read_statfor_market_segment_rules()}.}
 }
 \value{
 The output file path, invisibly.

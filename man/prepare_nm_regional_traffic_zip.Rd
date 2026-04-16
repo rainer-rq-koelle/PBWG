@@ -8,7 +8,8 @@ prepare_nm_regional_traffic_zip(
   zipped_archive_path,
   files = NULL,
   type = c("parquet", "csv", "csv_auto"),
-  airport_classifier = is_ectrl_member_state_airport
+  airport_classifier = is_ectrl_member_state_airport,
+  market_segment_rules = NULL
 )
 }
 \arguments{
@@ -22,9 +23,13 @@ prepare_nm_regional_traffic_zip(
 
 \item{airport_classifier}{Function that classifies ICAO aerodromes as inside
 or outside the target region.}
+
+\item{market_segment_rules}{Optional rules returned by
+\code{read_statfor_market_segment_rules()}.}
 }
 \value{
-A tibble with daily movement and wake-category summaries.
+A tibble with daily movement, wake-category, and market-segment
+summaries.
 }
 \description{
 Reads files from a zipped NM flight table archive, aggregates each file
