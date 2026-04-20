@@ -39,6 +39,11 @@ The next planned airport-focused outputs are:
 - arrival additional time in terminal airspace (`ASMA`)
 - departure additional time in terminal airspace (`DSMA`)
 
+Additional-time outputs use the shared count and time-column conventions
+defined in [metric-output-schema.md](metric-output-schema.md). In particular,
+`MVTS_VALID` is the metric-ready sample, `MVTS_NA` is the excluded sample, and
+observed/reference/additional-time totals are calculated over `MVTS_VALID`.
+
 ## Naming Principles
 
 - Tibble column names are kept in upper case, for example `ADEP`, `ADES`,

@@ -11,11 +11,16 @@ summarise_pbwg_txxt_daily(augmented_txxt, year = NULL, valid_only = TRUE)
 
 \item{year}{Optional reporting year filter.}
 
-\item{valid_only}{When \code{TRUE}, only movements with valid taxi times are
-counted.}
+\item{valid_only}{Deprecated. Kept for compatibility; the summary keeps
+invalid or no-reference movements in \code{MVTS_NA} so the daily total can be
+recovered as \code{MVTS_VALID + MVTS_NA}.}
 }
 \value{
-A tibble with daily taxi-time summary metrics.
+A tibble with daily taxi-time summary metrics. \code{MVTS_VALID} counts
+movements with the fields and reference needed to calculate the metric.
+\code{MVTS_NA} counts movements excluded because a required taxi-time input is
+invalid or no reference is available. \code{TOT_TXXT}, \code{TOT_REF}, and
+\code{TOT_ADD_TIME} are totals over \code{MVTS_VALID}.
 }
 \description{
 Aggregates augmented taxi samples to the daily PBWG output format used for

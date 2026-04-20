@@ -92,6 +92,7 @@ test_that("apply_txxt_reference joins reference values and flags missing matches
     PHASE = c("DEP", "DEP"),
     RWY = c("27R", "27L"),
     STND = c("A1", "B2"),
+    MVT_TIME = as.POSIXct(c("2025-01-01 10:20:00", "2025-01-01 11:18:00"), tz = "UTC"),
     BLOCK_TIME = as.POSIXct(c("2025-01-01 10:00:00", "2025-01-01 11:00:00"), tz = "UTC"),
     TXXT = c(20, 18),
     VALID_TXXT = c(TRUE, TRUE)
@@ -124,6 +125,7 @@ test_that("summarise_pbwg_txxt_daily aggregates totals without averaging", {
     TXXT = c(20, 18, 12),
     REF_TXXT = c(15, NA, 10),
     ADD_TXXT = c(5, NA, 2),
+    HAS_REFERENCE = c(TRUE, FALSE, TRUE),
     TX_NA = c(FALSE, TRUE, FALSE),
     VALID_TXXT = c(TRUE, TRUE, TRUE)
   )
@@ -133,10 +135,14 @@ test_that("summarise_pbwg_txxt_daily aggregates totals without averaging", {
   dep_row <- dplyr::filter(summary_data, .data$PHASE %in% "DEP")
   arr_row <- dplyr::filter(summary_data, .data$PHASE %in% "ARR")
 
-  expect_equal(dep_row$MVTS, 2L)
+  expect_equal(dep_row$MVTS_VALID, 1L)
+  expect_equal(dep_row$MVTS_NA, 1L)
+  expect_equal(dep_row$TOT_TXXT, 20)
   expect_equal(dep_row$TOT_REF, 15)
   expect_equal(dep_row$TOT_ADD_TIME, 5)
-  expect_equal(dep_row$TX_NA, 1L)
+  expect_equal(arr_row$MVTS_VALID, 1L)
+  expect_equal(arr_row$MVTS_NA, 0L)
+  expect_equal(arr_row$TOT_TXXT, 12)
   expect_equal(arr_row$TOT_REF, 10)
   expect_equal(arr_row$TOT_ADD_TIME, 2)
 })
@@ -251,5 +257,5 @@ test_that("create_pbwg_txxt_annual_file writes daily and augmented airport files
   expect_true(fs::file_exists(unname(outputs$augmented_paths["EGLL"])))
 
   written_daily <- readr::read_csv(unname(outputs$daily_paths["EGLL"]), show_col_types = FALSE)
-  expect_true(all(c("ICAO", "PHASE", "DATE", "MVTS", "TOT_REF", "TOT_ADD_TIME", "TX_NA") %in% names(written_daily)))
+  expect_true(all(c("ICAO", "PHASE", "DATE", "MVTS_VALID", "MVTS_NA", "TOT_TXXT", "TOT_REF", "TOT_ADD_TIME") %in% names(written_daily)))
 })

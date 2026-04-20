@@ -34,8 +34,8 @@ prepare_apdf_txxt_daily_zip(
 \item{valid_reference_only}{When \code{TRUE}, only references flagged with
 \code{IS_VALID_SAMPLE} are used.}
 
-\item{valid_only}{When \code{TRUE}, only movements with valid taxi times are
-counted in the daily summary.}
+\item{valid_only}{Deprecated. Kept for compatibility; daily summaries now
+retain excluded movements in \code{MVTS_NA}.}
 }
 \value{
 A tibble with daily taxi-time summary metrics.

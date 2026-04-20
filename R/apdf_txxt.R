@@ -433,7 +433,7 @@ apply_txxt_reference <- function(
   stop_if_apdf_columns_missing(
     txxt_samples,
     required_columns = c(
-      "ICAO", "PHASE", "RWY", "STND", "BLOCK_TIME", "TXXT", "VALID_TXXT"
+      "ICAO", "PHASE", "RWY", "STND", "MVT_TIME", "BLOCK_TIME", "TXXT", "VALID_TXXT"
     )
   )
   stop_if_apdf_columns_missing(
@@ -460,7 +460,7 @@ apply_txxt_reference <- function(
       by = c("ICAO", "PHASE", "RWY", "STND")
     ) |>
     dplyr::mutate(
-      DATE = lubridate::date(.data$BLOCK_TIME),
+      DATE = dplyr::coalesce(lubridate::date(.data$BLOCK_TIME), lubridate::date(.data$MVT_TIME)),
       HAS_REFERENCE = !is.na(.data$REF_TXXT),
       TX_NA = !.data$HAS_REFERENCE,
       ADD_TXXT = dplyr::if_else(
@@ -479,10 +479,15 @@ apply_txxt_reference <- function(
 #'
 #' @param augmented_txxt A tibble from `apply_txxt_reference()`.
 #' @param year Optional reporting year filter.
-#' @param valid_only When `TRUE`, only movements with valid taxi times are
-#'   counted.
+#' @param valid_only Deprecated. Kept for compatibility; the summary keeps
+#'   invalid or no-reference movements in `MVTS_NA` so the daily total can be
+#'   recovered as `MVTS_VALID + MVTS_NA`.
 #'
-#' @return A tibble with daily taxi-time summary metrics.
+#' @return A tibble with daily taxi-time summary metrics. `MVTS_VALID` counts
+#'   movements with the fields and reference needed to calculate the metric.
+#'   `MVTS_NA` counts movements excluded because a required taxi-time input is
+#'   invalid or no reference is available. `TOT_TXXT`, `TOT_REF`, and
+#'   `TOT_ADD_TIME` are totals over `MVTS_VALID`.
 #' @export
 summarise_pbwg_txxt_daily <- function(
     augmented_txxt,
@@ -493,22 +498,20 @@ summarise_pbwg_txxt_daily <- function(
     augmented_txxt,
     required_columns = c(
       "ICAO", "PHASE", "DATE", "TXXT", "REF_TXXT", "ADD_TXXT",
-      "TX_NA", "VALID_TXXT"
+      "HAS_REFERENCE", "TX_NA", "VALID_TXXT"
     )
   )
 
   summary_input <- tibble::as_tibble(augmented_txxt)
 
-  if (valid_only) {
-    summary_input <- dplyr::filter(summary_input, .data$VALID_TXXT)
-  }
-
   daily_summary <- summary_input |>
+    dplyr::mutate(METRIC_VALID = .data$VALID_TXXT & .data$HAS_REFERENCE) |>
     dplyr::summarise(
-      MVTS = dplyr::n(),
-      TOT_REF = sum(.data$REF_TXXT, na.rm = TRUE),
-      TOT_ADD_TIME = sum(.data$ADD_TXXT, na.rm = TRUE),
-      TX_NA = sum(.data$TX_NA, na.rm = TRUE),
+      MVTS_VALID = sum(.data$METRIC_VALID, na.rm = TRUE),
+      MVTS_NA = sum(!.data$METRIC_VALID, na.rm = TRUE),
+      TOT_TXXT = sum(dplyr::if_else(.data$METRIC_VALID, .data$TXXT, NA_real_), na.rm = TRUE),
+      TOT_REF = sum(dplyr::if_else(.data$METRIC_VALID, .data$REF_TXXT, NA_real_), na.rm = TRUE),
+      TOT_ADD_TIME = sum(dplyr::if_else(.data$METRIC_VALID, .data$ADD_TXXT, NA_real_), na.rm = TRUE),
       .by = c("ICAO", "PHASE", "DATE")
     ) |>
     dplyr::arrange(.data$ICAO, .data$PHASE, .data$DATE)
@@ -600,8 +603,8 @@ prepare_apdf_txxt_augmented_zip <- function(
 #' @param max_txxt Maximum taxi time in minutes kept as a candidate sample.
 #' @param valid_reference_only When `TRUE`, only references flagged with
 #'   `IS_VALID_SAMPLE` are used.
-#' @param valid_only When `TRUE`, only movements with valid taxi times are
-#'   counted in the daily summary.
+#' @param valid_only Deprecated. Kept for compatibility; daily summaries now
+#'   retain excluded movements in `MVTS_NA`.
 #'
 #' @return A tibble with daily taxi-time summary metrics.
 #' @export
@@ -814,8 +817,8 @@ write_pbwg_txxt_augmented <- function(
 #' @param max_txxt Maximum taxi time in minutes kept as a candidate sample.
 #' @param valid_reference_only When `TRUE`, only references flagged with
 #'   `IS_VALID_SAMPLE` are used.
-#' @param valid_only When `TRUE`, only movements with valid taxi times are
-#'   counted in the daily summary.
+#' @param valid_only Deprecated. Kept for compatibility; daily summaries now
+#'   retain excluded movements in `MVTS_NA`.
 #' @param save_augmented When `TRUE`, write the augmented movement-level taxi
 #'   data per airport.
 #' @param augmented_dir Directory where augmented movement-level files will be
