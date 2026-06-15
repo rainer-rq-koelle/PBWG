@@ -190,15 +190,54 @@ test_that("create_pbwg_network_traffic_annual_file writes canonical annual outpu
   withr::local_dir(tmp_dir)
   utils::zip(zipfile = "nm.zip", files = "part1.csv")
 
+  rules <- list(
+    low_cost_operators = character(),
+    regional_types = character(),
+    business_types = character(),
+    cargo_rules = tibble::tibble(
+      OPERATOR = "UPS",
+      AC_TYPE = "ALL",
+      CALLSIGN = "ALL",
+      REGISTRATION = "ALL"
+    )
+  ) |>
+    PBWG:::add_prepared_cargo_sets()
+
   output_path <- create_pbwg_network_traffic_annual_file(
     zipped_archive_path = file.path(tmp_dir, "nm.zip"),
     year = 2023,
     output_dir = tmp_dir,
-    type = "csv"
+    type = "csv",
+    market_segment_rules = rules
   )
 
   expect_true(fs::file_exists(output_path))
   expect_true(grepl("PBWG-EUR-network-traffic-2023\\.csv$", output_path))
+})
+
+test_that("create_pbwg_network_traffic_annual_file requires market segment rules", {
+  tmp_dir <- withr::local_tempdir()
+
+  writeLines(
+    c(
+      "ADEP,ADES,LOBT,WK_TBL_CAT",
+      "EGLL,KJFK,2023-01-01 10:00:00,H"
+    ),
+    file.path(tmp_dir, "part1.csv")
+  )
+
+  withr::local_dir(tmp_dir)
+  utils::zip(zipfile = "nm.zip", files = "part1.csv")
+
+  expect_error(
+    create_pbwg_network_traffic_annual_file(
+      zipped_archive_path = file.path(tmp_dir, "nm.zip"),
+      year = 2023,
+      output_dir = tmp_dir,
+      type = "csv"
+    ),
+    "requires STATFOR market-segment rules"
+  )
 })
 
 test_that("combine_pbwg_network_traffic_years creates a multi-year file", {

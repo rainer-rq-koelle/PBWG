@@ -260,6 +260,8 @@ create_pbwg_network_traffic_annual_file <- function(
     airport_classifier = is_ectrl_member_state_airport,
     market_segment_rules = NULL
 ) {
+  assert_canonical_market_segment_rules(market_segment_rules)
+
   summary_data <- prepare_nm_regional_traffic_zip(
     zipped_archive_path = zipped_archive_path,
     files = files,
@@ -275,6 +277,22 @@ create_pbwg_network_traffic_annual_file <- function(
     output_dir = output_dir,
     region = region
   )
+}
+
+assert_canonical_market_segment_rules <- function(market_segment_rules) {
+  has_cargo_rules <- !is.null(market_segment_rules) &&
+    length(market_segment_rules$cargo_operator_all) > 0
+
+  if (!has_cargo_rules) {
+    rlang::abort(
+      paste(
+        "Canonical network traffic generation requires STATFOR market-segment rules.",
+        "Pass rules from read_statfor_market_segment_rules() so all-cargo flights are classified correctly."
+      )
+    )
+  }
+
+  invisible(market_segment_rules)
 }
 
 #' Read PBWG Network Traffic Files
