@@ -43,6 +43,9 @@ vignettes/*.pdf
 docs/
 .tmp-lib/
 
+# Generated analysis outputs belong in PBWG-data, not the package repo
+outputs/
+
 # translation temp files
 po/*~
 

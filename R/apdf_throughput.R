@@ -25,6 +25,136 @@ calc_throughput <- function(apdf, unit = "hour") {
     dplyr::arrange(.data$ICAO, .data$BIN)
 }
 
+#' Prepare Throughput Load Characteristics
+#'
+#' Joins hourly throughput to annual airport capacity values and derives the
+#' base-load and peak-load threshold flags used for BLI/PLI reporting.
+#'
+#' @param throughput A tibble with at least `ICAO`, `BIN`, and either `FLTS` or
+#'   both `ARRS` and `DEPS`.
+#' @param capacities A tibble with columns `APT_ICAO`, `YEAR`, and `MAX_CAP`.
+#' @param base_threshold Numeric fraction used for the base-load threshold.
+#'   Defaults to `0.2`.
+#' @param peak_threshold Numeric fraction used for the peak-load threshold.
+#'   Defaults to `0.8`.
+#'
+#' @return A tibble with hourly throughput, joined capacity values, threshold
+#'   levels, and boolean `BLI` / `PLI` flags.
+#' @export
+prepare_throughput_load_characteristics <- function(
+    throughput,
+    capacities,
+    base_threshold = 0.2,
+    peak_threshold = 0.8
+) {
+  if (!all(c("ICAO", "BIN") %in% names(throughput))) {
+    rlang::abort("throughput must contain columns ICAO and BIN.")
+  }
+
+  if (!all(c("APT_ICAO", "YEAR", "MAX_CAP") %in% names(capacities))) {
+    rlang::abort("capacities must contain columns APT_ICAO, YEAR, and MAX_CAP.")
+  }
+
+  if (base_threshold < 0 || peak_threshold < 0 || base_threshold > peak_threshold) {
+    rlang::abort("Thresholds must satisfy 0 <= base_threshold <= peak_threshold.")
+  }
+
+  hourly <- tibble::as_tibble(throughput)
+
+  if (!"FLTS" %in% names(hourly)) {
+    if (!all(c("ARRS", "DEPS") %in% names(hourly))) {
+      rlang::abort("throughput must contain FLTS, or both ARRS and DEPS.")
+    }
+
+    hourly <- dplyr::mutate(hourly, FLTS = .data$ARRS + .data$DEPS)
+  }
+
+  if (!"ARRS" %in% names(hourly)) {
+    hourly <- dplyr::mutate(hourly, ARRS = NA_real_)
+  }
+
+  if (!"DEPS" %in% names(hourly)) {
+    hourly <- dplyr::mutate(hourly, DEPS = NA_real_)
+  }
+
+  hourly |>
+    dplyr::mutate(
+      YEAR = lubridate::year(.data$BIN),
+      TOT_THRU = .data$FLTS,
+      THRU_ARRS = .data$ARRS,
+      THRU_DEPS = .data$DEPS
+    ) |>
+    dplyr::left_join(
+      dplyr::rename(capacities, ICAO = "APT_ICAO"),
+      by = dplyr::join_by(ICAO, YEAR)
+    ) |>
+    dplyr::mutate(
+      BASE_THRESHOLD = base_threshold,
+      PEAK_THRESHOLD = peak_threshold,
+      BLI_THR = .data$BASE_THRESHOLD * .data$MAX_CAP,
+      PLI_THR = .data$PEAK_THRESHOLD * .data$MAX_CAP,
+      BLI = .data$TOT_THRU >= .data$BLI_THR,
+      PLI = .data$TOT_THRU >= .data$PLI_THR
+    ) |>
+    dplyr::arrange(.data$ICAO, .data$BIN)
+}
+
+#' Prepare Ordered Throughput Curves
+#'
+#' Orders hourly throughput observations from highest to lowest per airport-year
+#' to support ranked-throughput illustrations.
+#'
+#' @param throughput_loads Output from
+#'   [prepare_throughput_load_characteristics()].
+#' @param years Optional years to keep.
+#'
+#' @return A tibble with rank-ordered hourly throughput by airport-year.
+#' @export
+prepare_ordered_throughput <- function(throughput_loads, years = NULL) {
+  ordered <- tibble::as_tibble(throughput_loads)
+
+  if (!is.null(years)) {
+    ordered <- dplyr::filter(ordered, .data$YEAR %in% years)
+  }
+
+  ordered |>
+    dplyr::group_by(.data$ICAO, .data$YEAR) |>
+    dplyr::arrange(dplyr::desc(.data$TOT_THRU), .data$BIN, .by_group = TRUE) |>
+    dplyr::mutate(RANK = dplyr::row_number()) |>
+    dplyr::ungroup()
+}
+
+#' Summarise Base-Load and Peak-Load Indices
+#'
+#' Calculates BLI and PLI shares per airport-year from hourly throughput load
+#' characteristics.
+#'
+#' @param throughput_loads Output from
+#'   [prepare_throughput_load_characteristics()].
+#'
+#' @return A tibble with total observed hours and BLI/PLI shares per
+#'   airport-year.
+#' @export
+summarise_load_indices <- function(throughput_loads) {
+  throughput_loads |>
+    tibble::as_tibble() |>
+    dplyr::group_by(.data$ICAO, .data$YEAR) |>
+    dplyr::summarise(
+      N = dplyr::n(),
+      MAX_CAP = dplyr::first(.data$MAX_CAP),
+      BASE_THRESHOLD = dplyr::first(.data$BASE_THRESHOLD),
+      PEAK_THRESHOLD = dplyr::first(.data$PEAK_THRESHOLD),
+      BLI_THR = dplyr::first(.data$BLI_THR),
+      PLI_THR = dplyr::first(.data$PLI_THR),
+      BLI_HRS = if (all(is.na(.data$BLI))) NA_real_ else sum(.data$BLI, na.rm = TRUE),
+      PLI_HRS = if (all(is.na(.data$PLI))) NA_real_ else sum(.data$PLI, na.rm = TRUE),
+      BLI = .data$BLI_HRS / .data$N,
+      PLI = .data$PLI_HRS / .data$N,
+      .groups = "drop"
+    ) |>
+    dplyr::arrange(.data$ICAO, .data$YEAR)
+}
+
 #' Prepare APDF Throughput Directly from a ZIP Archive
 #'
 #' Reads APDF files from an archive, prepares each airport-year file, computes

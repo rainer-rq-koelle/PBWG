@@ -281,7 +281,12 @@ create_pbwg_network_traffic_annual_file <- function(
 
 assert_canonical_market_segment_rules <- function(market_segment_rules) {
   has_cargo_rules <- !is.null(market_segment_rules) &&
-    length(market_segment_rules$cargo_operator_all) > 0
+    (
+      length(market_segment_rules$cargo_operator_all) > 0 ||
+        length(market_segment_rules$cargo_type_all) > 0 ||
+        (!is.null(market_segment_rules$cargo_rules_special) &&
+          nrow(market_segment_rules$cargo_rules_special) > 0)
+    )
 
   if (!has_cargo_rules) {
     rlang::abort(

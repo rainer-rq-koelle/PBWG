@@ -120,3 +120,43 @@ test_that("create and combine PBWG throughput files work", {
   expect_true(fs::file_exists(combined))
   expect_true(grepl("PBWG-EUR-thru-analytic-2024-2025\\.csv$", combined))
 })
+
+test_that("throughput load helpers derive ordered curves and load indices", {
+  throughput <- tibble::tibble(
+    ICAO = c("EGLL", "EGLL", "EGLL", "EGLL"),
+    BIN = as.POSIXct(
+      c(
+        "2025-01-01 10:00:00",
+        "2025-01-01 11:00:00",
+        "2025-01-02 10:00:00",
+        "2025-01-02 11:00:00"
+      ),
+      tz = "UTC"
+    ),
+    ARRS = c(10, 4, 8, 1),
+    DEPS = c(12, 2, 7, 1)
+  )
+
+  capacities <- tibble::tibble(
+    APT_ICAO = "EGLL",
+    YEAR = 2025,
+    MAX_CAP = 20
+  )
+
+  loads <- prepare_throughput_load_characteristics(
+    throughput = throughput,
+    capacities = capacities,
+    base_threshold = 0.25,
+    peak_threshold = 0.75
+  )
+
+  ordered <- prepare_ordered_throughput(loads, years = 2025)
+  summary <- summarise_load_indices(loads)
+
+  expect_equal(loads$TOT_THRU, c(22, 6, 15, 2))
+  expect_equal(loads$BLI_THR, rep(5, 4))
+  expect_equal(loads$PLI_THR, rep(15, 4))
+  expect_equal(ordered$RANK, c(1L, 2L, 3L, 4L))
+  expect_equal(summary$BLI, 0.75)
+  expect_equal(summary$PLI, 0.5)
+})

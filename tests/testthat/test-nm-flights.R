@@ -215,6 +215,47 @@ test_that("create_pbwg_network_traffic_annual_file writes canonical annual outpu
   expect_true(grepl("PBWG-EUR-network-traffic-2023\\.csv$", output_path))
 })
 
+test_that("create_pbwg_network_traffic_annual_file accepts aircraft-type cargo rules", {
+  tmp_dir <- withr::local_tempdir()
+
+  writeLines(
+    c(
+      "ADEP,ADES,LOBT,WK_TBL_CAT,AIRCRAFT_OPERATOR,AIRCRAFT_TYPE_ICAO_ID,ICAO_FLT_TYPE,AIRCRAFT_ID,REGISTRATION",
+      "EGLL,KJFK,2023-01-01 10:00:00,H,ABC,B77L,N,ABC123,TEST"
+    ),
+    file.path(tmp_dir, "part1.csv")
+  )
+
+  withr::local_dir(tmp_dir)
+  utils::zip(zipfile = "nm.zip", files = "part1.csv")
+
+  rules <- list(
+    low_cost_operators = character(),
+    regional_types = character(),
+    business_types = character(),
+    cargo_rules = tibble::tibble(
+      OPERATOR = NA_character_,
+      AC_TYPE = "B77L",
+      CALLSIGN = "ALL",
+      REGISTRATION = "ALL"
+    )
+  ) |>
+    PBWG:::add_prepared_cargo_sets()
+
+  output_path <- create_pbwg_network_traffic_annual_file(
+    zipped_archive_path = file.path(tmp_dir, "nm.zip"),
+    year = 2023,
+    output_dir = tmp_dir,
+    type = "csv",
+    market_segment_rules = rules
+  )
+
+  output <- readr::read_csv(output_path, show_col_types = FALSE)
+
+  expect_equal(output$ALL_CARGO, 1L)
+  expect_equal(output$CARGO, 1L)
+})
+
 test_that("create_pbwg_network_traffic_annual_file requires market segment rules", {
   tmp_dir <- withr::local_tempdir()
 
