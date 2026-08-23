@@ -187,6 +187,408 @@ summarise_tma_reference_input_quality <- function(tma_samples) {
     dplyr::arrange(.data$ICAO, .data$PHASE, .data$RANGE_NM)
 }
 
+#' Prepare Terminal-Airspace Bearing Histogram Data
+#'
+#' Counts known crossing bearings in equal-width bins around the aerodrome
+#' reference point. The returned data includes zero-count bins so plots retain
+#' the full circular 0--360 degree scale for every requested range.
+#'
+#' @param tma_samples A terminal-airspace sample tibble from
+#'   `prepare_tma_reference_input()`.
+#' @param airport ICAO location indicator.
+#' @param phase Operational phase, typically `"ARR"` or `"DEP"`.
+#' @param ranges Numeric vector of terminal-airspace ranges in nautical miles.
+#' @param bearing_bin_width Width of each bearing bin in degrees. It must divide
+#'   360 exactly.
+#' @param valid_only When `TRUE`, only samples passing terminal-airspace input
+#'   validity checks are counted. The default keeps every known bearing so that
+#'   sector identification reflects the observed traffic geometry.
+#'
+#' @return A tibble with one row per range and bearing bin.
+#' @export
+prepare_tma_bearing_histogram <- function(
+    tma_samples,
+    airport,
+    phase,
+    ranges = c(40, 100),
+    bearing_bin_width = 6,
+    valid_only = FALSE
+) {
+  required_columns <- c("ICAO", "PHASE", "RANGE_NM", "BEARING")
+  if (valid_only) {
+    required_columns <- c(required_columns, "VALID_TMA")
+  }
+
+  stop_if_apdf_columns_missing(
+    tma_samples,
+    required_columns = required_columns
+  )
+
+  if (base::length(airport) != 1 || is.na(airport) || !nzchar(airport)) {
+    rlang::abort("`airport` must be one non-missing ICAO location indicator.")
+  }
+  if (base::length(phase) != 1 || is.na(phase) || !nzchar(phase)) {
+    rlang::abort("`phase` must be one non-missing operational phase.")
+  }
+  if (
+    base::length(bearing_bin_width) != 1 ||
+      !is.finite(bearing_bin_width) ||
+      bearing_bin_width <= 0 ||
+      abs((360 / bearing_bin_width) - round(360 / bearing_bin_width)) > .Machine$double.eps^0.5
+  ) {
+    rlang::abort("`bearing_bin_width` must be positive and divide 360 exactly.")
+  }
+
+  ranges <- sort(unique(as.numeric(ranges)))
+  if (base::length(ranges) == 0 || any(is.na(ranges))) {
+    rlang::abort("`ranges` must contain one or more numeric values.")
+  }
+
+  n_bins <- as.integer(round(360 / bearing_bin_width))
+  bin_template <- tidyr::crossing(
+    RANGE_NM = ranges,
+    BIN_ID = seq_len(n_bins)
+  ) |>
+    dplyr::mutate(
+      BEARING_FROM = (.data$BIN_ID - 1) * bearing_bin_width,
+      BEARING_TO = .data$BIN_ID * bearing_bin_width,
+      BEARING_MID = (.data$BEARING_FROM + .data$BEARING_TO) / 2
+    )
+
+  histogram_input <- tibble::as_tibble(tma_samples) |>
+    dplyr::filter(
+      .data$ICAO %in% airport,
+      .data$PHASE %in% phase,
+      .data$RANGE_NM %in% ranges,
+      !is.na(.data$BEARING)
+    ) |>
+    dplyr::mutate(
+      BEARING = .data$BEARING %% 360,
+      BIN_ID = pmin(floor(.data$BEARING / bearing_bin_width) + 1, n_bins)
+    )
+
+  if (valid_only) {
+    histogram_input <- dplyr::filter(histogram_input, .data$VALID_TMA)
+  }
+
+  bin_counts <- histogram_input |>
+    dplyr::count(.data$RANGE_NM, .data$BIN_ID, name = "N")
+  sample_counts <- histogram_input |>
+    dplyr::count(.data$RANGE_NM, name = "N_BEARINGS")
+
+  bin_template |>
+    dplyr::left_join(bin_counts, by = c("RANGE_NM", "BIN_ID")) |>
+    dplyr::left_join(sample_counts, by = "RANGE_NM") |>
+    dplyr::mutate(
+      N = dplyr::coalesce(.data$N, 0L),
+      N_BEARINGS = dplyr::coalesce(.data$N_BEARINGS, 0L),
+      AIRPORT = airport,
+      PHASE = phase,
+      BIN_WIDTH = bearing_bin_width
+    ) |>
+    dplyr::select(
+      .data$AIRPORT, .data$PHASE, .data$RANGE_NM,
+      .data$BIN_ID, .data$BEARING_FROM, .data$BEARING_TO,
+      .data$BEARING_MID, .data$N, .data$N_BEARINGS, .data$BIN_WIDTH
+    )
+}
+
+#' Prepare Smoothed Terminal-Airspace Bearing Density Data
+#'
+#' Produces one-degree bearing counts and applies a wrapped Gaussian smoother.
+#' The smoother treats 0 and 360 degrees as adjacent, allowing the same
+#' diagnostic to reveal flows that do or do not cross North.
+#'
+#' @param tma_samples A terminal-airspace sample tibble from
+#'   `prepare_tma_reference_input()`.
+#' @param airport ICAO location indicator.
+#' @param phase Operational phase, typically `"ARR"` or `"DEP"`.
+#' @param ranges Numeric vector of terminal-airspace ranges in nautical miles.
+#' @param smoothing_bandwidth Gaussian bandwidth in degrees. Its effective
+#'   influence extends to approximately three times this value on either side.
+#' @param valid_only When `TRUE`, only samples passing terminal-airspace input
+#'   validity checks are counted.
+#'
+#' @return A tibble with one row per one-degree bearing bin and a `SMOOTHED_N`
+#'   column.
+#' @export
+prepare_tma_bearing_density <- function(
+    tma_samples,
+    airport,
+    phase,
+    ranges = c(40, 100),
+    smoothing_bandwidth = 6,
+    valid_only = FALSE
+) {
+  if (
+    base::length(smoothing_bandwidth) != 1 ||
+      !is.finite(smoothing_bandwidth) ||
+      smoothing_bandwidth <= 0
+  ) {
+    rlang::abort("`smoothing_bandwidth` must be one positive number of degrees.")
+  }
+
+  prepare_tma_bearing_histogram(
+    tma_samples = tma_samples,
+    airport = airport,
+    phase = phase,
+    ranges = ranges,
+    bearing_bin_width = 1,
+    valid_only = valid_only
+  ) |>
+    dplyr::mutate(
+      SMOOTHED_N = tma_circular_gaussian_smooth(
+        counts = .data$N,
+        bandwidth = smoothing_bandwidth
+      ),
+      DENSITY_SHARE = .data$SMOOTHED_N / .data$N_BEARINGS,
+      SMOOTHING_BANDWIDTH = smoothing_bandwidth,
+      .by = c("AIRPORT", "PHASE", "RANGE_NM")
+    )
+}
+
+#' Identify Local Extrema in Terminal-Airspace Bearing Density
+#'
+#' Identifies circular local peaks and minima in a smoothed bearing density.
+#' Peak prominence and valley depth are supplied as relative measures so an
+#' analyst can distinguish substantial traffic-flow basins from minor ripples.
+#'
+#' @param tma_density A tibble from `prepare_tma_bearing_density()`.
+#' @param min_relative_prominence Minimum relative peak prominence or valley
+#'   depth used to flag an extremum as analytically substantial.
+#'
+#' @return A tibble of local peaks and minima with their prominence metrics.
+#' @export
+identify_tma_bearing_extrema <- function(
+    tma_density,
+    min_relative_prominence = 0.02
+) {
+  stop_if_apdf_columns_missing(
+    tma_density,
+    required_columns = c(
+      "AIRPORT", "PHASE", "RANGE_NM", "BIN_ID", "BEARING_MID", "SMOOTHED_N"
+    )
+  )
+
+  if (
+    base::length(min_relative_prominence) != 1 ||
+      !is.finite(min_relative_prominence) ||
+      min_relative_prominence < 0
+  ) {
+    rlang::abort("`min_relative_prominence` must be one non-negative number.")
+  }
+
+  tibble::as_tibble(tma_density) |>
+    dplyr::arrange(.data$AIRPORT, .data$PHASE, .data$RANGE_NM, .data$BIN_ID) |>
+    dplyr::summarise(
+      extrema = list(tma_circular_extrema_one(
+        smoothed_counts = .data$SMOOTHED_N,
+        bearings = .data$BEARING_MID,
+        bin_ids = .data$BIN_ID
+      )),
+      .by = c("AIRPORT", "PHASE", "RANGE_NM")
+    ) |>
+    tidyr::unnest(.data$extrema) |>
+    dplyr::mutate(
+      IS_SUBSTANTIAL = .data$RELATIVE_PROMINENCE >= min_relative_prominence
+    ) |>
+    dplyr::arrange(.data$AIRPORT, .data$PHASE, .data$RANGE_NM, .data$BEARING)
+}
+
+#' Propose Terminal-Airspace Sector Definitions from Bearing Density
+#'
+#' Builds candidate sectors from valleys between substantial circular bearing
+#' peaks. Each valley is rounded to a human-readable grid position only when
+#' the rounded position remains within the low-density portion of that valley.
+#'
+#' @param tma_density A tibble from `prepare_tma_bearing_density()`.
+#' @param extrema A tibble from `identify_tma_bearing_extrema()`.
+#' @param rounding_increment Angular increment in degrees for final sector
+#'   boundaries. It must divide 360 exactly.
+#' @param valley_safety_fraction The fraction of the rise from a valley to its
+#'   lower neighbouring peak within which a rounded cut must remain.
+#'
+#' @return A list containing `sector_definitions` and `cut_audit` tibbles.
+#' @export
+propose_tma_sector_definitions <- function(
+    tma_density,
+    extrema,
+    rounding_increment = 5,
+    valley_safety_fraction = 0.25
+) {
+  stop_if_apdf_columns_missing(
+    tma_density,
+    required_columns = c(
+      "AIRPORT", "PHASE", "RANGE_NM", "BIN_ID", "BEARING_MID", "SMOOTHED_N"
+    )
+  )
+  stop_if_apdf_columns_missing(
+    extrema,
+    required_columns = c(
+      "AIRPORT", "PHASE", "RANGE_NM", "BIN_ID", "EXTREMUM", "IS_SUBSTANTIAL"
+    )
+  )
+  if (
+    base::length(rounding_increment) != 1 ||
+      !is.finite(rounding_increment) ||
+      rounding_increment <= 0 ||
+      abs((360 / rounding_increment) - round(360 / rounding_increment)) > .Machine$double.eps^0.5
+  ) {
+    rlang::abort("`rounding_increment` must be positive and divide 360 exactly.")
+  }
+  if (
+    base::length(valley_safety_fraction) != 1 ||
+      !is.finite(valley_safety_fraction) ||
+      valley_safety_fraction < 0 ||
+      valley_safety_fraction > 1
+  ) {
+    rlang::abort("`valley_safety_fraction` must be between zero and one.")
+  }
+
+  density <- tibble::as_tibble(tma_density) |>
+    dplyr::mutate(RANGE_NM = as.numeric(as.character(.data$RANGE_NM)))
+  extrema <- tibble::as_tibble(extrema) |>
+    dplyr::mutate(RANGE_NM = as.numeric(as.character(.data$RANGE_NM)))
+  proposal_index <- density |>
+    dplyr::distinct(.data$AIRPORT, .data$PHASE, .data$RANGE_NM) |>
+    dplyr::arrange(.data$AIRPORT, .data$PHASE, .data$RANGE_NM)
+
+  proposals <- purrr::pmap(
+    proposal_index,
+    function(AIRPORT, PHASE, RANGE_NM) {
+      airport_value <- AIRPORT
+      phase_value <- PHASE
+      range_value <- RANGE_NM
+
+      propose_tma_sector_definitions_one(
+        density = dplyr::filter(
+          density,
+          .data$AIRPORT %in% airport_value,
+          .data$PHASE %in% phase_value,
+          .data$RANGE_NM %in% range_value
+        ),
+        extrema = dplyr::filter(
+          extrema,
+          .data$AIRPORT %in% airport_value,
+          .data$PHASE %in% phase_value,
+          .data$RANGE_NM %in% range_value
+        ),
+        airport = airport_value,
+        phase = phase_value,
+        range_nm = range_value,
+        rounding_increment = rounding_increment,
+        valley_safety_fraction = valley_safety_fraction
+      )
+    }
+  )
+
+  list(
+    sector_definitions = dplyr::bind_rows(purrr::map(proposals, "sector_definitions")),
+    cut_audit = dplyr::bind_rows(purrr::map(proposals, "cut_audit"))
+  )
+}
+
+#' Summarise Terminal-Airspace Sector Support
+#'
+#' Assigns candidate sectors and reports their movement volume together with
+#' the distribution of runway and aircraft-class reference-cell sample sizes.
+#' No sample-size threshold is applied by this diagnostic.
+#'
+#' @param tma_samples A terminal-airspace sample tibble from
+#'   `prepare_tma_reference_input()`.
+#' @param sector_definitions A tibble of candidate sector definitions.
+#'
+#' @return A list containing `sector_summary`, `reference_cells`, and
+#'   `assigned_samples`.
+#' @export
+summarise_tma_sector_support <- function(tma_samples, sector_definitions) {
+  stop_if_apdf_columns_missing(
+    tma_samples,
+    required_columns = c(
+      "ICAO", "PHASE", "RANGE_NM", "BEARING", "VALID_TMA", "CLASS", "RWY"
+    )
+  )
+
+  definitions <- validate_tma_sector_definitions(sector_definitions)
+  assigned_samples <- assign_tma_sector(
+    tma_samples = tma_samples,
+    sector_definitions = definitions
+  )
+  sector_index <- definitions |>
+    dplyr::select(
+      .data$ICAO, .data$PHASE, .data$RANGE_NM, .data$SECTOR,
+      .data$SECTOR_ID, .data$SECTOR_LABEL, .data$SECTOR_SEQ,
+      .data$BEARING_FROM, .data$BEARING_TO, .data$NORTH_OVERRUN
+    )
+
+  range_counts <- assigned_samples |>
+    dplyr::filter(!is.na(.data$BEARING)) |>
+    dplyr::count(.data$ICAO, .data$PHASE, .data$RANGE_NM, name = "N_RANGE_CROSSINGS")
+  movement_counts <- assigned_samples |>
+    dplyr::filter(!is.na(.data$SECTOR)) |>
+    dplyr::summarise(
+      N_CROSSINGS = dplyr::n(),
+      N_VALID_TMA = sum(.data$VALID_TMA, na.rm = TRUE),
+      .by = c("ICAO", "PHASE", "RANGE_NM", "SECTOR")
+    )
+  reference_cells <- assigned_samples |>
+    dplyr::filter(
+      !is.na(.data$SECTOR),
+      .data$VALID_TMA,
+      !is.na(.data$CLASS),
+      !is.na(.data$RWY)
+    ) |>
+    dplyr::count(
+      .data$ICAO, .data$PHASE, .data$RANGE_NM, .data$SECTOR,
+      .data$SECTOR_ID, .data$RWY, .data$CLASS,
+      name = "N"
+    ) |>
+    dplyr::arrange(
+      .data$ICAO, .data$PHASE, .data$RANGE_NM,
+      .data$SECTOR, .data$RWY, .data$CLASS
+    )
+  cell_summary <- reference_cells |>
+    dplyr::summarise(
+      N_REFERENCE_CELLS = dplyr::n(),
+      N_RUNWAYS = dplyr::n_distinct(.data$RWY),
+      N_CLASSES = dplyr::n_distinct(.data$CLASS),
+      MIN_CELL_N = min(.data$N),
+      P25_CELL_N = as.numeric(stats::quantile(.data$N, probs = 0.25, names = FALSE)),
+      MEDIAN_CELL_N = stats::median(.data$N),
+      MAX_CELL_N = max(.data$N),
+      .by = c("ICAO", "PHASE", "RANGE_NM", "SECTOR")
+    )
+
+  sector_summary <- sector_index |>
+    dplyr::left_join(
+      movement_counts,
+      by = c("ICAO", "PHASE", "RANGE_NM", "SECTOR")
+    ) |>
+    dplyr::left_join(
+      range_counts,
+      by = c("ICAO", "PHASE", "RANGE_NM")
+    ) |>
+    dplyr::left_join(
+      cell_summary,
+      by = c("ICAO", "PHASE", "RANGE_NM", "SECTOR")
+    ) |>
+    dplyr::mutate(
+      N_CROSSINGS = dplyr::coalesce(.data$N_CROSSINGS, 0L),
+      N_VALID_TMA = dplyr::coalesce(.data$N_VALID_TMA, 0L),
+      PCT_RANGE_CROSSINGS = .data$N_CROSSINGS / .data$N_RANGE_CROSSINGS,
+      N_REFERENCE_CELLS = dplyr::coalesce(.data$N_REFERENCE_CELLS, 0L),
+      N_RUNWAYS = dplyr::coalesce(.data$N_RUNWAYS, 0L),
+      N_CLASSES = dplyr::coalesce(.data$N_CLASSES, 0L)
+    ) |>
+    dplyr::arrange(.data$ICAO, .data$PHASE, .data$RANGE_NM, .data$SECTOR_SEQ)
+
+  list(
+    sector_summary = sector_summary,
+    reference_cells = reference_cells,
+    assigned_samples = assigned_samples
+  )
+}
+
 #' Build a Human-Readable Terminal-Airspace Sector Label
 #'
 #' Returns a human-readable sector identifier from the start and end bearings.
@@ -312,7 +714,7 @@ assign_tma_sector <- function(
     samples,
     dplyr::select(
       matched,
-      ".ROW_ID", "SECTOR", "SECTOR_LABEL", "SECTOR_SEQ",
+      ".ROW_ID", "SECTOR", "SECTOR_ID", "SECTOR_LABEL", "SECTOR_SEQ",
       "BEARING_FROM", "BEARING_TO", "START_ROTATION", "CUT_FROM", "CUT_TO"
     ),
     by = ".ROW_ID"
@@ -365,6 +767,15 @@ build_tma_reference <- function(
 
   filtered_samples <- tibble::as_tibble(tma_samples)
 
+  if (!"SECTOR_ID" %in% names(filtered_samples)) {
+    filtered_samples$SECTOR_ID <- stringr::str_c(
+      filtered_samples$ICAO,
+      filtered_samples$PHASE,
+      filtered_samples$SECTOR,
+      sep = "-"
+    )
+  }
+
   for (optional_col in c("START_ROTATION", "CUT_FROM", "CUT_TO")) {
     if (!optional_col %in% names(filtered_samples)) {
       filtered_samples[[optional_col]] <- NA_real_
@@ -392,6 +803,7 @@ build_tma_reference <- function(
     dplyr::summarise(
       N = dplyr::n(),
       REF_TMA = calc_tma_reference_value(.data$TMA_TIME, variant = variant),
+      SECTOR_ID = dplyr::first(.data$SECTOR_ID),
       SECTOR_LABEL = dplyr::first(.data$SECTOR_LABEL),
       BEARING_FROM = dplyr::first(.data$BEARING_FROM),
       BEARING_TO = dplyr::first(.data$BEARING_TO),
@@ -1513,6 +1925,21 @@ write_tma_sector_diagnostic_plots <- function(
   )
 }
 
+#' Prepare Terminal-Airspace Samples from an APDF Archive
+#'
+#' Reads APDF files from an archive and prepares the terminal-airspace samples
+#' used for bearing diagnostics and reference-time construction.
+#'
+#' @param zipped_archive_path Full path to the APDF ZIP archive.
+#' @param files Optional archived file names to read. By default all files are
+#'   read.
+#' @param type File type inside the archive. One of `"parquet"`, `"csv"`, or
+#'   `"csv_auto"`.
+#' @param ranges Numeric vector of ranges in nautical miles to keep.
+#' @param max_tma Maximum travel time in minutes kept as a candidate sample.
+#'
+#' @return A terminal-airspace sample tibble.
+#' @export
 prepare_apdf_tma_reference_input_from_zip <- function(
     zipped_archive_path,
     files = NULL,
@@ -1578,6 +2005,230 @@ normalise_pbwg_aircraft_class <- function(class) {
   class
 }
 
+tma_circular_gaussian_smooth <- function(counts, bandwidth) {
+  n <- base::length(counts)
+  radius <- base::ceiling(3 * bandwidth)
+  offsets <- seq.int(-radius, radius)
+  weights <- stats::dnorm(offsets, mean = 0, sd = bandwidth)
+  weights <- weights / sum(weights)
+
+  vapply(
+    seq_len(n),
+    function(index) {
+      neighbours <- ((index + offsets - 1L) %% n) + 1L
+      sum(counts[neighbours] * weights)
+    },
+    numeric(1)
+  )
+}
+
+tma_circular_extrema_one <- function(smoothed_counts, bearings, bin_ids) {
+  n <- base::length(smoothed_counts)
+  if (n < 3 || all(!is.finite(smoothed_counts))) {
+    return(tibble::tibble())
+  }
+
+  previous <- smoothed_counts[c(n, seq_len(n - 1L))]
+  following <- smoothed_counts[c(2:n, 1L)]
+  peak_index <- which(smoothed_counts > previous & smoothed_counts >= following)
+  minimum_index <- which(smoothed_counts < previous & smoothed_counts <= following)
+
+  if (base::length(peak_index) == 0 || base::length(minimum_index) == 0) {
+    return(tibble::tibble())
+  }
+
+  previous_index <- function(index, candidates) {
+    candidate <- candidates[candidates < index]
+    if (base::length(candidate) == 0) max(candidates) else max(candidate)
+  }
+  following_index <- function(index, candidates) {
+    candidate <- candidates[candidates > index]
+    if (base::length(candidate) == 0) min(candidates) else min(candidate)
+  }
+
+  maximum_density <- max(smoothed_counts, na.rm = TRUE)
+  peak_data <- tibble::tibble(
+    EXTREMUM = "PEAK",
+    INDEX = peak_index,
+    BIN_ID = bin_ids[peak_index],
+    BEARING = bearings[peak_index],
+    SMOOTHED_N = smoothed_counts[peak_index],
+    RELATIVE_PROMINENCE = vapply(
+      peak_index,
+      function(index) {
+        left_minimum <- previous_index(index, minimum_index)
+        right_minimum <- following_index(index, minimum_index)
+        (smoothed_counts[index] - max(smoothed_counts[c(left_minimum, right_minimum)])) /
+          maximum_density
+      },
+      numeric(1)
+    )
+  )
+  minimum_data <- tibble::tibble(
+    EXTREMUM = "MINIMUM",
+    INDEX = minimum_index,
+    BIN_ID = bin_ids[minimum_index],
+    BEARING = bearings[minimum_index],
+    SMOOTHED_N = smoothed_counts[minimum_index],
+    RELATIVE_PROMINENCE = vapply(
+      minimum_index,
+      function(index) {
+        left_peak <- previous_index(index, peak_index)
+        right_peak <- following_index(index, peak_index)
+        (min(smoothed_counts[c(left_peak, right_peak)]) - smoothed_counts[index]) /
+          maximum_density
+      },
+      numeric(1)
+    )
+  )
+
+  dplyr::bind_rows(peak_data, minimum_data) |>
+    dplyr::select(-.data$INDEX)
+}
+
+propose_tma_sector_definitions_one <- function(
+    density,
+    extrema,
+    airport,
+    phase,
+    range_nm,
+    rounding_increment,
+    valley_safety_fraction
+) {
+  density <- dplyr::arrange(density, .data$BIN_ID)
+  peaks <- extrema |>
+    dplyr::filter(.data$EXTREMUM %in% "PEAK", .data$IS_SUBSTANTIAL) |>
+    dplyr::arrange(.data$BIN_ID)
+
+  if (nrow(peaks) < 2) {
+    rlang::abort(
+      stringr::str_c(
+        "At least two substantial peaks are required to propose sectors for ",
+        airport, " ", phase, " ", range_nm, "NM."
+      )
+    )
+  }
+
+  n_bins <- nrow(density)
+  maximum_density <- max(density$SMOOTHED_N, na.rm = TRUE)
+  grid <- seq(0, 360 - rounding_increment, by = rounding_increment)
+  density_at_bearing <- function(bearing) {
+    circular_distance <- abs(((density$BEARING_MID - bearing + 180) %% 360) - 180)
+    density$SMOOTHED_N[which.min(circular_distance)]
+  }
+
+  cuts <- purrr::map_dfr(
+    seq_len(nrow(peaks)),
+    function(index) {
+      next_index <- if (index == nrow(peaks)) 1L else index + 1L
+      left_bin <- peaks$BIN_ID[index]
+      right_bin <- peaks$BIN_ID[next_index]
+      segment_bins <- if (left_bin < right_bin) {
+        seq.int(left_bin, right_bin)
+      } else {
+        c(seq.int(left_bin, n_bins), seq.int(1L, right_bin))
+      }
+      segment_rows <- match(segment_bins, density$BIN_ID)
+      valley_row <- segment_rows[which.min(density$SMOOTHED_N[segment_rows])]
+      valley_density <- density$SMOOTHED_N[valley_row]
+      lower_peak_density <- min(peaks$SMOOTHED_N[c(index, next_index)])
+      safety_limit <- valley_density +
+        valley_safety_fraction * (lower_peak_density - valley_density)
+      raw_cut <- density$BEARING_MID[valley_row]
+      grid_density <- vapply(grid, density_at_bearing, numeric(1))
+      grid_distance <- abs(((grid - raw_cut + 180) %% 360) - 180)
+      safe_grid <- tibble::tibble(
+        CUT_ROUNDED = grid,
+        DENSITY_AT_CUT = grid_density,
+        ROUNDING_DISTANCE = grid_distance
+      ) |>
+        dplyr::filter(.data$DENSITY_AT_CUT <= safety_limit) |>
+        dplyr::arrange(.data$ROUNDING_DISTANCE, .data$DENSITY_AT_CUT, .data$CUT_ROUNDED)
+      crosses_north <- left_bin > right_bin
+      north_density <- density_at_bearing(0)
+
+      if (crosses_north && north_density <= safety_limit) {
+        rounded_cut <- 0
+        density_at_cut <- north_density
+        rounding_status <- "NORTH_SEAM"
+      } else if (nrow(safe_grid) > 0) {
+        rounded_cut <- safe_grid$CUT_ROUNDED[[1]]
+        density_at_cut <- safe_grid$DENSITY_AT_CUT[[1]]
+        rounding_status <- "SAFE_GRID"
+      } else {
+        rounded_cut <- NA_real_
+        density_at_cut <- NA_real_
+        rounding_status <- "REVIEW_REQUIRED"
+      }
+
+      tibble::tibble(
+        ICAO = airport,
+        PHASE = phase,
+        RANGE_NM = range_nm,
+        LEFT_PEAK = peaks$BEARING[index],
+        RIGHT_PEAK = peaks$BEARING[next_index],
+        PEAK_SEPARATION_DEG = (peaks$BEARING[next_index] - peaks$BEARING[index] + 360) %% 360,
+        LOWER_PEAK_DENSITY = lower_peak_density,
+        CUT_RAW = raw_cut,
+        CUT_ROUNDED = rounded_cut,
+        ROUNDING_DELTA = if (is.na(rounded_cut)) NA_real_ else
+          ((rounded_cut - raw_cut + 180) %% 360) - 180,
+        ROUNDING_INCREMENT = rounding_increment,
+        ROUNDING_STATUS = rounding_status,
+        VALLEY_DENSITY = valley_density,
+        VALLEY_SAFETY_LIMIT = safety_limit,
+        DENSITY_AT_CUT = density_at_cut,
+        RELATIVE_VALLEY_DEPTH = (lower_peak_density - valley_density) / maximum_density,
+        VALLEY_TO_LOWER_PEAK_RATIO = valley_density / lower_peak_density,
+        PAIRWISE_SEPARATION = 1 - (valley_density / lower_peak_density),
+        IS_NORTH_PAIR = crosses_north
+      )
+    }
+  )
+
+  if (any(is.na(cuts$CUT_ROUNDED))) {
+    rlang::abort("At least one candidate cut cannot be safely rounded; analyst review is required.")
+  }
+  if (anyDuplicated(cuts$CUT_ROUNDED)) {
+    rlang::abort("Two candidate cuts round to the same boundary; analyst review is required.")
+  }
+
+  north_overrun <- any(cuts$IS_NORTH_PAIR & cuts$ROUNDING_STATUS != "NORTH_SEAM")
+  sector_cuts <- sort(cuts$CUT_ROUNDED)
+  if (!north_overrun && !0 %in% sector_cuts) {
+    rlang::abort("A non-wrapping proposal must include 000 as the North seam.")
+  }
+
+  sector_definitions <- tibble::tibble(
+    ICAO = airport,
+    PHASE = phase,
+    RANGE_NM = range_nm,
+    SECTOR_SEQ = seq_along(sector_cuts),
+    BEARING_FROM = sector_cuts,
+    BEARING_TO = c(
+      sector_cuts[-1],
+      if (north_overrun) sector_cuts[[1]] else 0
+    ),
+    NORTH_OVERRUN = north_overrun
+  ) |>
+    dplyr::mutate(
+      SECTOR = build_tma_sector_label(.data$BEARING_FROM, .data$BEARING_TO),
+      SECTOR_ID = stringr::str_c(.data$ICAO, .data$PHASE, .data$SECTOR, sep = "-"),
+      SECTOR_LABEL = stringr::str_c(.data$PHASE, " ", .data$SECTOR)
+    )
+
+  list(
+    sector_definitions = sector_definitions,
+    cut_audit = cuts |>
+      dplyr::left_join(
+        dplyr::select(sector_definitions, .data$BEARING_FROM, .data$SECTOR, .data$SECTOR_ID),
+        by = c("CUT_ROUNDED" = "BEARING_FROM")
+      ) |>
+      dplyr::mutate(NORTH_OVERRUN = north_overrun) |>
+      dplyr::arrange(.data$CUT_ROUNDED)
+  )
+}
+
 validate_tma_sector_definitions <- function(sector_definitions) {
   stop_if_apdf_columns_missing(
     sector_definitions,
@@ -1590,6 +2241,10 @@ validate_tma_sector_definitions <- function(sector_definitions) {
     defs$SECTOR_LABEL <- defs$SECTOR
   }
 
+  if (!"SECTOR_ID" %in% names(defs)) {
+    defs$SECTOR_ID <- stringr::str_c(defs$ICAO, defs$PHASE, defs$SECTOR, sep = "-")
+  }
+
   if (!"SECTOR_SEQ" %in% names(defs)) {
     defs$SECTOR_SEQ <- seq_len(nrow(defs))
   }
@@ -1600,9 +2255,17 @@ validate_tma_sector_definitions <- function(sector_definitions) {
     }
   }
 
+  if (!"NORTH_OVERRUN" %in% names(defs)) {
+    defs$NORTH_OVERRUN <- defs$BEARING_FROM > defs$BEARING_TO & defs$BEARING_TO != 0
+  }
+
   defs <- defs |>
     dplyr::mutate(
       SECTOR = as.character(.data$SECTOR),
+      SECTOR_ID = dplyr::coalesce(
+        as.character(.data$SECTOR_ID),
+        stringr::str_c(.data$ICAO, .data$PHASE, .data$SECTOR, sep = "-")
+      ),
       SECTOR_LABEL = dplyr::coalesce(.data$SECTOR_LABEL, .data$SECTOR),
       BEARING_FROM = .data$BEARING_FROM %% 360,
       BEARING_TO = .data$BEARING_TO %% 360

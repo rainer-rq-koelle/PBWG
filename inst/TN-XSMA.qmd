@@ -1,0 +1,1060 @@
+---
+title: "ASMA/DSMA development"
+format: html
+---
+
+## Problem Space
+
+By tradition we are using a "histogram" based approach to identify entry sectors for ASMA.   
+This approach shall be also applied to DSMA, i.e., identifying respective exit sectors.
+
+Using "sectors" offers flexibility as changes to the operational environment and airspace organisation will undergo changes.
+Entry/exit fixes or waypoints may be moved, introduced/removed.   
+Experience within the European airspace has demonstrated that such "system point" changes occur regularly making it impossible to maintain a respective database (in sync with AIRAC cycles).    
+Tactical sequencing and selective use of nuances in the clearance limit, make flights pass abeam such waypoints.
+
+Sector identification is based on the crossing of the respective approximation of the arrival/depature airspace.    
+By definition we use concentric circles of radius 40NM and 100NM around the aerodrome reference point (ARP).    
+Note: the vertical flight efficiency (VFE) horizon is 200NM. With a view to study XSMA/VFE, we may need to extend the ASMA/DSMA = XSMA references to also include 200NM ranges.    
+Conceptually, the algorithm should be paramterised, if future studies would require/identify another radius.
+
+The visual sector identification aims at identifying up to about 5-6 "sectors" unless there is operational evidence that the operations can be better described by using additional sectors.
+
+The XSMA algorithm determines a reference time for similar flight operations.   
+Similar flight operations are characterised by the 
+* respective entry/exit sector;
+* aircraft velocity range as a combination of weight turbulence category and propulsion system, i.e. L/M/H & P/T/J (e.g. Light Piston LP, Medium Turboprop MT, Heavy Jet HJ), while the A380 and a Antonov are typically associated as "Super" heavy 'S' from a WTC perspective, these aircraft as grouped together with HJ.
+* runway used for landing/ASMA or depature/DSMA.
+
+Discussion are on-going about adapting the newer groupings based on the recent recatorigation RECAT of aircraft in a pair-to-pair relationship to optimise the pairwise WTC separation.    
+This is currently out of scope, but from a conceptual perspective it should not influence the sectorisation identification. 
+The newer RECAT labels being a further breakdown of the existing WTC.   
+It may however influence sample sizes required for the determination of the reference times.
+
+The sample size for the determination of reference times is currently set as n = 20, given that the reference period covers movement within a full year.
+
+
+## Approach
+
+The XSMA analysis builds on the establishment of a reference time sample for the respective study airport.
+
+For this purpose we work with the 40NM and 100NM milestones embedded in the APDF data set.
+The APDF data set also provides for the bearing from the aerodrome reference point to the flight milestone, i.e., we do not have to calculate this from the ARP.
+
+### Reference Period Governance
+
+Each study establishes an agreed start reference set for its selected reference
+period. The 2024 set developed here is therefore specific to the current study;
+other studies may agree a different reference period. Once established, the
+study reference remains in use for subsequent analysis batches until an
+operational change or a new study decision requires a revised sectorisation and
+reference set.
+
+
+## Example - EGLL and LSZH
+
+We develop the initial sector-identification logic using EGLL and LSZH. The
+first diagnostic is the observed distribution of arrival crossing bearings.
+For this purpose, it counts every known APDF crossing bearing, rather than only
+movements that already pass the later class, runway, and time-validity filters.
+This keeps the sector proposal anchored in the geometry of the traffic flow.
+
+```{r}
+#| label: setup
+#| include: false
+
+library(dplyr)
+library(ggplot2)
+devtools::load_all("..", quiet = TRUE)
+```
+
+### EGLL arrivals, 2024
+
+```{r}
+#| label: egll-arrival-bearings
+#| include: false
+
+airport <- "EGLL"
+phase <- "ARR"
+reference_year <- 2024L
+bearing_bin_width <- 6
+
+apdf_archive <- Sys.getenv(
+  "PBWG_APDF_2024",
+  unset = "/Users/rainerkoelle/RProjects/__DATA/APDF/apdf-2024.zip"
+)
+egll_file <- "EGLL_01-JAN-2024_31-DEC-2024.gz.parquet"
+
+egll_arrival_samples <- prepare_apdf_tma_reference_input_from_zip(
+  zipped_archive_path = apdf_archive,
+  files = egll_file,
+  type = "parquet",
+  ranges = c(40, 100)
+)
+
+egll_arrival_histogram <- prepare_tma_bearing_histogram(
+  tma_samples = egll_arrival_samples,
+  airport = airport,
+  phase = phase,
+  ranges = c(40, 100),
+  bearing_bin_width = bearing_bin_width
+) |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+```
+
+The default bin width is 6 degrees, producing 60 equal bins around the ARP.
+`bearing_bin_width` is deliberately configurable, but must divide 360 exactly.
+The 100 NM horizon is shown above the 40 NM horizon so the two distributions
+can be compared on the same bearing scale. To render this note outside the
+development environment, set `PBWG_APDF_2024` to the local 2024 APDF archive.
+
+```{r}
+#| label: egll-arrival-bearing-histogram
+#| fig-width: 11
+#| fig-height: 7
+#| fig-cap: "EGLL arrival crossing bearings in 2024. Each bar is a 6 degree bearing bin; all known APDF crossing bearings are included."
+
+ggplot(
+  egll_arrival_histogram,
+  aes(x = .data$BEARING_MID, y = .data$N)
+) +
+  geom_col(width = bearing_bin_width, fill = "#2b6a8a", colour = "white", linewidth = 0.15) +
+  facet_wrap(~RANGE_NM, ncol = 1, scales = "free_y", labeller = label_both) +
+  scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = paste(airport, phase, "crossing bearings", reference_year),
+    subtitle = paste("Known APDF bearings;", bearing_bin_width, "degree bins"),
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Movements"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+### Smoothed Density And Local Extrema
+
+The one-degree counts are retained as the analytical grid, but not interpreted
+as one-degree operational detail. A wrapped Gaussian smoother reduces local
+noise while treating 360 and 000 degrees as adjacent. The default bandwidth is
+6 degrees, with an effective influence of approximately 18 degrees to either
+side. The prominence threshold only identifies substantial candidate extrema;
+it does not yet approve a sector boundary.
+
+```{r}
+#| label: egll-arrival-bearing-density
+#| include: false
+
+smoothing_bandwidth <- 6
+minimum_relative_prominence <- 0.02
+
+egll_arrival_density <- prepare_tma_bearing_density(
+  tma_samples = egll_arrival_samples,
+  airport = airport,
+  phase = phase,
+  ranges = c(40, 100),
+  smoothing_bandwidth = smoothing_bandwidth
+) |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+
+egll_arrival_extrema <- identify_tma_bearing_extrema(
+  tma_density = egll_arrival_density,
+  min_relative_prominence = minimum_relative_prominence
+) |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+```
+
+```{r}
+#| label: egll-arrival-bearing-density-plot
+#| fig-width: 11
+#| fig-height: 7
+#| fig-cap: "EGLL arrival bearing density in 2024. Triangles mark local peaks and inverted triangles local minima; filled markers pass the 2 percent relative-prominence screen. Labels identify substantial peaks only."
+
+ggplot(
+  egll_arrival_density,
+  aes(x = .data$BEARING_MID, y = .data$SMOOTHED_N)
+) +
+  geom_line(colour = "#2b6a8a", linewidth = 0.8) +
+  geom_point(
+    data = egll_arrival_extrema,
+    aes(
+      x = .data$BEARING,
+      y = .data$SMOOTHED_N,
+      shape = .data$EXTREMUM,
+      fill = .data$IS_SUBSTANTIAL
+    ),
+    size = 2.8,
+    colour = "#263238",
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = filter(egll_arrival_extrema, .data$EXTREMUM == "PEAK", .data$IS_SUBSTANTIAL),
+    aes(
+      x = .data$BEARING,
+      y = .data$SMOOTHED_N,
+      label = sprintf("%.0f", .data$BEARING)
+    ),
+    vjust = 1.7,
+    size = 3,
+    inherit.aes = FALSE
+  ) +
+  facet_wrap(~RANGE_NM, ncol = 1, scales = "free_y", labeller = label_both) +
+  scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+  scale_shape_manual(values = c(PEAK = 24, MINIMUM = 25)) +
+  scale_fill_manual(values = c(`TRUE` = "#f4a261", `FALSE` = "white")) +
+  guides(fill = "none") +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = paste(airport, phase, "smoothed crossing-bearing density", reference_year),
+    subtitle = paste("One-degree counts; circular Gaussian bandwidth", smoothing_bandwidth, "degrees"),
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Smoothed movements per degree",
+    shape = "Local extremum"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+For a peak, relative prominence is calculated as:
+
+```text
+(peak height - higher adjacent minimum) / highest density in the range
+```
+
+For a minimum, relative valley depth is calculated as:
+
+```text
+(lower adjacent peak - minimum height) / highest density in the range
+```
+
+```{r}
+#| label: egll-arrival-extrema-table
+
+egll_arrival_extrema |>
+  filter(.data$IS_SUBSTANTIAL) |>
+  transmute(
+    `Range (NM)` = .data$RANGE_NM,
+    Type = .data$EXTREMUM,
+    `Bearing (degrees)` = round(.data$BEARING, 1),
+    `Smoothed movements` = round(.data$SMOOTHED_N),
+    Metric = if_else(
+      .data$EXTREMUM == "PEAK",
+      "Relative peak prominence",
+      "Relative valley depth"
+    ),
+    Value = scales::percent(.data$RELATIVE_PROMINENCE, accuracy = 0.1)
+  )
+```
+
+### Proposed Sector Boundaries
+
+Candidate cuts are the lowest-density positions between substantial peaks. A
+candidate is rounded to the nearest 5-degree boundary only when that position
+remains within the lower 25 percent of the valley rise to its smaller adjacent
+peak. Where North lies safely in the final valley, it becomes the explicit
+`000` seam rather than creating a North-wrapping sector.
+
+```{r}
+#| label: egll-arrival-sector-proposal
+#| include: false
+
+rounding_increment <- 5
+valley_safety_fraction <- 0.25
+
+egll_arrival_proposal <- propose_tma_sector_definitions(
+  tma_density = egll_arrival_density,
+  extrema = egll_arrival_extrema,
+  rounding_increment = rounding_increment,
+  valley_safety_fraction = valley_safety_fraction
+)
+
+egll_arrival_sector_definitions <- egll_arrival_proposal$sector_definitions |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+
+egll_arrival_cut_audit <- egll_arrival_proposal$cut_audit |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+
+egll_arrival_sector_support <- summarise_tma_sector_support(
+  tma_samples = egll_arrival_samples,
+  sector_definitions = egll_arrival_proposal$sector_definitions
+)
+```
+
+```{r}
+#| label: egll-arrival-proposed-boundaries
+#| fig-width: 11
+#| fig-height: 7
+#| fig-cap: "EGLL proposed 2024 ARR sector boundaries. Solid vertical lines are valley-safe rounded boundaries; the 000 line is the non-wrapping North seam."
+
+ggplot(
+  egll_arrival_density,
+  aes(x = .data$BEARING_MID, y = .data$SMOOTHED_N)
+) +
+  geom_line(colour = "#2b6a8a", linewidth = 0.8) +
+  geom_vline(
+    data = egll_arrival_cut_audit,
+    aes(xintercept = .data$CUT_ROUNDED),
+    colour = "#c8553d",
+    linewidth = 0.7,
+    linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
+  facet_wrap(~RANGE_NM, ncol = 1, scales = "free_y", labeller = label_both) +
+  scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = paste(airport, phase, "proposed sector boundaries", reference_year),
+    subtitle = paste("Valley-safe", rounding_increment, "degree rounding"),
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Smoothed movements per degree"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: egll-arrival-cut-audit
+
+egll_arrival_cut_audit |>
+  transmute(
+    `Range (NM)` = .data$RANGE_NM,
+    `Left peak` = round(.data$LEFT_PEAK, 1),
+    `Right peak` = round(.data$RIGHT_PEAK, 1),
+    `Raw cut` = round(.data$CUT_RAW, 1),
+    `Final cut` = .data$CUT_ROUNDED,
+    `Rounding delta` = round(.data$ROUNDING_DELTA, 1),
+    Status = .data$ROUNDING_STATUS,
+    `North overrun` = .data$NORTH_OVERRUN
+  )
+```
+
+### Movement And Reference-Cell Support
+
+The candidate sectors are now assessed without applying a sample-size
+threshold. The table shows traffic volume and the distribution of 2024 valid
+reference-cell counts by runway and aircraft class. `SECTOR_ID` is the fully
+contextual identifier retained for audit and maintenance; `SECTOR` remains the
+compact bearing label used alongside the ICAO and phase columns in the lookup.
+
+```{r}
+#| label: egll-arrival-sector-support
+
+egll_arrival_sector_support$sector_summary |>
+  transmute(
+    `Range (NM)` = .data$RANGE_NM,
+    `Sector ID` = .data$SECTOR_ID,
+    `Crossings` = .data$N_CROSSINGS,
+    `Range share` = scales::percent(.data$PCT_RANGE_CROSSINGS, accuracy = 0.1),
+    `Valid TMA` = .data$N_VALID_TMA,
+    `Reference cells` = .data$N_REFERENCE_CELLS,
+    `Min cell n` = .data$MIN_CELL_N,
+    `P25 cell n` = round(.data$P25_CELL_N),
+    `Median cell n` = round(.data$MEDIAN_CELL_N),
+    `Max cell n` = .data$MAX_CELL_N
+  )
+```
+
+### LSZH Arrivals, 2024
+
+LSZH applies the same diagnostic settings as EGLL. Its intersecting-runway
+operation provides a contrasting test: the method may legitimately identify a
+different number of flows at 40 NM and 100 NM, and a sector may cross North
+when the observed bearing density is continuous across 360 and 000 degrees.
+
+```{r}
+#| label: lszh-arrival-input
+#| include: false
+
+lszh_file <- "LSZH_01-JAN-2024_31-DEC-2024.gz.parquet"
+
+lszh_arrival_samples <- prepare_apdf_tma_reference_input_from_zip(
+  zipped_archive_path = apdf_archive,
+  files = lszh_file,
+  type = "parquet",
+  ranges = c(40, 100)
+)
+
+lszh_arrival_histogram <- prepare_tma_bearing_histogram(
+  tma_samples = lszh_arrival_samples,
+  airport = "LSZH",
+  phase = "ARR",
+  ranges = c(40, 100),
+  bearing_bin_width = bearing_bin_width
+) |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+
+lszh_arrival_density <- prepare_tma_bearing_density(
+  tma_samples = lszh_arrival_samples,
+  airport = "LSZH",
+  phase = "ARR",
+  ranges = c(40, 100),
+  smoothing_bandwidth = smoothing_bandwidth
+) |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+
+lszh_arrival_extrema <- identify_tma_bearing_extrema(
+  tma_density = lszh_arrival_density,
+  min_relative_prominence = minimum_relative_prominence
+) |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+
+lszh_arrival_proposal <- propose_tma_sector_definitions(
+  tma_density = lszh_arrival_density,
+  extrema = lszh_arrival_extrema,
+  rounding_increment = rounding_increment,
+  valley_safety_fraction = valley_safety_fraction
+)
+
+lszh_arrival_cut_audit <- lszh_arrival_proposal$cut_audit |>
+  mutate(RANGE_NM = factor(RANGE_NM, levels = c(100, 40)))
+
+lszh_arrival_sector_support <- summarise_tma_sector_support(
+  tma_samples = lszh_arrival_samples,
+  sector_definitions = lszh_arrival_proposal$sector_definitions
+)
+```
+
+```{r}
+#| label: lszh-arrival-bearing-histogram
+#| fig-width: 11
+#| fig-height: 7
+#| fig-cap: "LSZH arrival crossing bearings in 2024. Each bar is a 6 degree bearing bin; all known APDF crossing bearings are included."
+
+ggplot(
+  lszh_arrival_histogram,
+  aes(x = .data$BEARING_MID, y = .data$N)
+) +
+  geom_col(width = bearing_bin_width, fill = "#2b6a8a", colour = "white", linewidth = 0.15) +
+  facet_wrap(~RANGE_NM, ncol = 1, scales = "free_y", labeller = label_both) +
+  scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = "LSZH ARR crossing bearings 2024",
+    subtitle = paste("Known APDF bearings;", bearing_bin_width, "degree bins"),
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Movements"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: lszh-arrival-proposed-boundaries
+#| fig-width: 11
+#| fig-height: 7
+#| fig-cap: "LSZH proposed 2024 ARR sector boundaries. Dashed lines are valley-safe rounded boundaries; the final sector crosses North where the density supports it."
+
+ggplot(
+  lszh_arrival_density,
+  aes(x = .data$BEARING_MID, y = .data$SMOOTHED_N)
+) +
+  geom_line(colour = "#2b6a8a", linewidth = 0.8) +
+  geom_vline(
+    data = lszh_arrival_cut_audit,
+    aes(xintercept = .data$CUT_ROUNDED),
+    colour = "#c8553d",
+    linewidth = 0.7,
+    linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
+  facet_wrap(~RANGE_NM, ncol = 1, scales = "free_y", labeller = label_both) +
+  scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = "LSZH ARR proposed sector boundaries 2024",
+    subtitle = paste("Valley-safe", rounding_increment, "degree rounding"),
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Smoothed movements per degree"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: lszh-arrival-cut-audit
+
+lszh_arrival_cut_audit |>
+  transmute(
+    `Range (NM)` = .data$RANGE_NM,
+    `Left peak` = round(.data$LEFT_PEAK, 1),
+    `Right peak` = round(.data$RIGHT_PEAK, 1),
+    `Raw cut` = round(.data$CUT_RAW, 1),
+    `Final cut` = .data$CUT_ROUNDED,
+    `Rounding delta` = round(.data$ROUNDING_DELTA, 1),
+    Status = .data$ROUNDING_STATUS,
+    `North overrun` = .data$NORTH_OVERRUN
+  )
+```
+
+```{r}
+#| label: lszh-arrival-sector-support
+
+lszh_arrival_sector_support$sector_summary |>
+  transmute(
+    `Range (NM)` = .data$RANGE_NM,
+    `Sector ID` = .data$SECTOR_ID,
+    `Crossings` = .data$N_CROSSINGS,
+    `Range share` = scales::percent(.data$PCT_RANGE_CROSSINGS, accuracy = 0.1),
+    `Valid TMA` = .data$N_VALID_TMA,
+    `Reference cells` = .data$N_REFERENCE_CELLS,
+    `Min cell n` = .data$MIN_CELL_N,
+    `P25 cell n` = round(.data$P25_CELL_N),
+    `Median cell n` = round(.data$MEDIAN_CELL_N),
+    `Max cell n` = .data$MAX_CELL_N
+  )
+```
+
+### LSZH Multi-Peak Assessment
+
+Close peaks are not automatically separate sectors. For each candidate cut, we
+compare the valley with the lower of its adjacent peaks, repeat the proposal at
+4, 6, and 8 degree smoothing bandwidths, and compare conditional 20th
+percentile reference times and conditional median times for runway/class cells
+shared on both sides. The 20th-percentile comparison tests the possible impact
+on the GANP reference; the median comparison describes typical operational
+behaviour. The `0.75` pairwise-separation value below is an investigation flag,
+not an acceptance threshold.
+
+```{r}
+#| label: lszh-multipeak-input
+#| include: false
+
+analysis_bandwidths <- c(4, 6, 8)
+
+lszh_multiscale_results <- purrr::map(
+  analysis_bandwidths,
+  function(bandwidth) {
+    density <- prepare_tma_bearing_density(
+      tma_samples = lszh_arrival_samples,
+      airport = "LSZH",
+      phase = "ARR",
+      ranges = c(40, 100),
+      smoothing_bandwidth = bandwidth
+    )
+    extrema <- identify_tma_bearing_extrema(
+      tma_density = density,
+      min_relative_prominence = minimum_relative_prominence
+    )
+    proposal <- propose_tma_sector_definitions(
+      tma_density = density,
+      extrema = extrema,
+      rounding_increment = rounding_increment,
+      valley_safety_fraction = valley_safety_fraction
+    )
+
+    list(density = density, cut_audit = proposal$cut_audit)
+  }
+)
+
+lszh_multiscale_density <- purrr::imap_dfr(
+  lszh_multiscale_results,
+  function(result, index) {
+    mutate(result$density, SMOOTHING_BANDWIDTH = analysis_bandwidths[[index]])
+  }
+)
+
+lszh_multiscale_cuts <- purrr::imap_dfr(
+  lszh_multiscale_results,
+  function(result, index) {
+    mutate(result$cut_audit, SMOOTHING_BANDWIDTH = analysis_bandwidths[[index]])
+  }
+)
+
+circular_distance <- function(first, second) {
+  abs(((first - second + 180) %% 360) - 180)
+}
+
+lszh_cut_stability <- lszh_multiscale_cuts |>
+  filter(.data$SMOOTHING_BANDWIDTH == smoothing_bandwidth) |>
+  transmute(
+    RANGE_NM = .data$RANGE_NM,
+    CUT = .data$CUT_ROUNDED,
+    N_STABLE_BANDWIDTHS = purrr::map2_int(
+      .data$RANGE_NM,
+      .data$CUT_ROUNDED,
+      function(range_nm, cut) {
+        sum(purrr::map_lgl(
+          analysis_bandwidths,
+          function(bandwidth) {
+            candidates <- lszh_multiscale_cuts |>
+              filter(
+                .data$RANGE_NM == range_nm,
+                .data$SMOOTHING_BANDWIDTH == bandwidth
+              ) |>
+              pull(.data$CUT_ROUNDED)
+            any(circular_distance(candidates, cut) <= rounding_increment)
+          }
+        ))
+      }
+    )
+  )
+
+lszh_cell_references <- lszh_arrival_sector_support$assigned_samples |>
+  filter(.data$VALID_TMA, !is.na(.data$SECTOR)) |>
+  summarise(
+    N = dplyr::n(),
+    GANP_P20 = as.numeric(stats::quantile(.data$TMA_TIME, probs = 0.20, names = FALSE)),
+    TYPICAL_P50 = stats::median(.data$TMA_TIME),
+    .by = c("RANGE_NM", "SECTOR", "RWY", "CLASS")
+  )
+
+lszh_boundary_pairs <- lszh_arrival_proposal$cut_audit |>
+  left_join(
+    lszh_arrival_proposal$sector_definitions |>
+      transmute(
+        RANGE_NM = .data$RANGE_NM,
+        CUT_ROUNDED = .data$BEARING_TO,
+        LEFT_SECTOR = .data$SECTOR
+      ),
+    by = c("RANGE_NM", "CUT_ROUNDED")
+  ) |>
+  transmute(
+    RANGE_NM = .data$RANGE_NM,
+    CUT = .data$CUT_ROUNDED,
+    PEAK_SEPARATION_DEG = .data$PEAK_SEPARATION_DEG,
+    VALLEY_TO_LOWER_PEAK_RATIO = .data$VALLEY_TO_LOWER_PEAK_RATIO,
+    PAIRWISE_SEPARATION = .data$PAIRWISE_SEPARATION,
+    LEFT_SECTOR = .data$LEFT_SECTOR,
+    RIGHT_SECTOR = .data$SECTOR
+  )
+
+lszh_boundary_utility <- lszh_boundary_pairs |>
+  left_join(
+    lszh_cell_references |>
+      rename(
+        LEFT_SECTOR = .data$SECTOR,
+        N_LEFT = .data$N,
+        P20_LEFT = .data$GANP_P20,
+        P50_LEFT = .data$TYPICAL_P50
+      ),
+    by = c("RANGE_NM", "LEFT_SECTOR")
+  ) |>
+  inner_join(
+    lszh_cell_references |>
+      rename(
+        RIGHT_SECTOR = .data$SECTOR,
+        N_RIGHT = .data$N,
+        P20_RIGHT = .data$GANP_P20,
+        P50_RIGHT = .data$TYPICAL_P50
+      ),
+    by = c("RANGE_NM", "RIGHT_SECTOR", "RWY", "CLASS")
+  ) |>
+  summarise(
+    N_SHARED_CELLS = dplyr::n(),
+    MIN_SHARED_CELL_N = min(pmin(.data$N_LEFT, .data$N_RIGHT)),
+    MEDIAN_ABS_P20_DIFF = stats::median(abs(.data$P20_LEFT - .data$P20_RIGHT)),
+    WEIGHTED_ABS_P20_DIFF = stats::weighted.mean(
+      abs(.data$P20_LEFT - .data$P20_RIGHT),
+      w = pmin(.data$N_LEFT, .data$N_RIGHT)
+    ),
+    MEDIAN_ABS_P50_DIFF = stats::median(abs(.data$P50_LEFT - .data$P50_RIGHT)),
+    WEIGHTED_ABS_P50_DIFF = stats::weighted.mean(
+      abs(.data$P50_LEFT - .data$P50_RIGHT),
+      w = pmin(.data$N_LEFT, .data$N_RIGHT)
+    ),
+    .by = c(
+      "RANGE_NM", "CUT", "PEAK_SEPARATION_DEG",
+      "VALLEY_TO_LOWER_PEAK_RATIO", "PAIRWISE_SEPARATION"
+    )
+  ) |>
+  left_join(lszh_cut_stability, by = c("RANGE_NM", "CUT")) |>
+  mutate(
+    GEOMETRY_REVIEW = case_when(
+      .data$PAIRWISE_SEPARATION < 0.75 ~ "Shallow valley review",
+      .data$PEAK_SEPARATION_DEG < 3 * smoothing_bandwidth ~ "Close peaks review",
+      .default = "No geometry warning"
+    )
+  ) |>
+  arrange(.data$RANGE_NM, .data$CUT)
+```
+
+```{r}
+#| label: lszh-100nm-multiscale-density
+#| fig-width: 11
+#| fig-height: 8
+#| fig-cap: "LSZH 100 NM arrival density at three smoothing bandwidths. The 4 degree view identifies additional small features that do not persist at 6 and 8 degrees."
+
+ggplot(
+  filter(lszh_multiscale_density, .data$RANGE_NM == 100),
+  aes(x = .data$BEARING_MID, y = .data$SMOOTHED_N)
+) +
+  geom_line(colour = "#2b6a8a", linewidth = 0.8) +
+  geom_vline(
+    data = filter(lszh_multiscale_cuts, .data$RANGE_NM == 100),
+    aes(xintercept = .data$CUT_ROUNDED),
+    colour = "#c8553d",
+    linewidth = 0.65,
+    linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
+  facet_wrap(~SMOOTHING_BANDWIDTH, ncol = 1, scales = "free_y") +
+  scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = "LSZH ARR 100 NM multi-scale density",
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Smoothed movements per degree"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: lszh-100nm-boundary-assessment
+
+lszh_boundary_utility |>
+  filter(.data$RANGE_NM == 100) |>
+  transmute(
+    `Cut` = .data$CUT,
+    `Peak gap (deg)` = round(.data$PEAK_SEPARATION_DEG, 1),
+    `Valley / lower peak` = scales::percent(.data$VALLEY_TO_LOWER_PEAK_RATIO, accuracy = 0.1),
+    `Pairwise separation` = scales::percent(.data$PAIRWISE_SEPARATION, accuracy = 0.1),
+    `Stable bandwidths` = .data$N_STABLE_BANDWIDTHS,
+    `Shared cells` = .data$N_SHARED_CELLS,
+    `Min shared n` = .data$MIN_SHARED_CELL_N,
+    `Weighted |P20 diff| (min)` = round(.data$WEIGHTED_ABS_P20_DIFF, 2),
+    `Weighted |P50 diff| (min)` = round(.data$WEIGHTED_ABS_P50_DIFF, 2),
+    `Geometry review` = .data$GEOMETRY_REVIEW
+  )
+```
+
+## Full Study-Airport ARR Review
+
+The same proposal workflow is now applied to the complete 2024 ARR study set.
+The APDF archive currently contains extracts for 11 of the 13 agreed airports:
+`EDDF`, `EDDM`, `EGKK`, `EGLL`, `EHAM`, `LEBL`, `LEMD`, `LFPG`, `LIRF`, `LSZH`,
+and `LTFM`. `LGAV` and `LPPT` remain in the study register, but their 2024 APDF
+extracts are not present in this archive and therefore cannot yet receive a
+proposal.
+
+The density matrix is a proposal-for-approval, not a final sector definition.
+Every dashed line is a valley-safe rounded candidate boundary. The decision
+register identifies boundaries requiring an analyst decision because they have
+a shallow valley, close peaks, or do not persist across the 4, 6, and 8 degree
+smoothers. Conditional weighted P20 and P50 differences are supporting
+evidence only; no materiality tolerance is applied at this stage.
+
+```{r}
+#| label: full-study-arrival-input
+#| include: false
+
+study_airports <- c(
+  "EDDF", "EDDM", "EGKK", "EGLL", "EHAM", "LEBL", "LEMD",
+  "LFPG", "LGAV", "LIRF", "LPPT", "LSZH", "LTFM"
+)
+available_study_airports <- setdiff(study_airports, c("LGAV", "LPPT"))
+
+circular_distance <- function(first, second) {
+  abs(((first - second + 180) %% 360) - 180)
+}
+
+build_boundary_utility <- function(samples, proposal, airport) {
+  assigned_samples <- summarise_tma_sector_support(
+    tma_samples = samples,
+    sector_definitions = proposal$sector_definitions
+  )$assigned_samples
+
+  cell_references <- assigned_samples |>
+    filter(.data$VALID_TMA, !is.na(.data$SECTOR)) |>
+    summarise(
+      N = dplyr::n(),
+      GANP_P20 = as.numeric(stats::quantile(.data$TMA_TIME, probs = 0.20, names = FALSE)),
+      TYPICAL_P50 = stats::median(.data$TMA_TIME),
+      .by = c("RANGE_NM", "SECTOR", "RWY", "CLASS")
+    )
+
+  boundary_pairs <- proposal$cut_audit |>
+    left_join(
+      proposal$sector_definitions |>
+        transmute(
+          RANGE_NM = .data$RANGE_NM,
+          CUT_ROUNDED = .data$BEARING_TO,
+          LEFT_SECTOR = .data$SECTOR
+        ),
+      by = c("RANGE_NM", "CUT_ROUNDED")
+    ) |>
+    transmute(
+      ICAO = airport,
+      RANGE_NM = .data$RANGE_NM,
+      CUT = .data$CUT_ROUNDED,
+      PEAK_SEPARATION_DEG = .data$PEAK_SEPARATION_DEG,
+      VALLEY_TO_LOWER_PEAK_RATIO = .data$VALLEY_TO_LOWER_PEAK_RATIO,
+      PAIRWISE_SEPARATION = .data$PAIRWISE_SEPARATION,
+      LEFT_SECTOR = .data$LEFT_SECTOR,
+      RIGHT_SECTOR = .data$SECTOR
+    )
+
+  boundary_pairs |>
+    left_join(
+      cell_references |>
+        rename(
+          LEFT_SECTOR = .data$SECTOR,
+          N_LEFT = .data$N,
+          P20_LEFT = .data$GANP_P20,
+          P50_LEFT = .data$TYPICAL_P50
+        ),
+      by = c("RANGE_NM", "LEFT_SECTOR")
+    ) |>
+    inner_join(
+      cell_references |>
+        rename(
+          RIGHT_SECTOR = .data$SECTOR,
+          N_RIGHT = .data$N,
+          P20_RIGHT = .data$GANP_P20,
+          P50_RIGHT = .data$TYPICAL_P50
+        ),
+      by = c("RANGE_NM", "RIGHT_SECTOR", "RWY", "CLASS")
+    ) |>
+    summarise(
+      N_SHARED_CELLS = dplyr::n(),
+      MIN_SHARED_CELL_N = min(pmin(.data$N_LEFT, .data$N_RIGHT)),
+      WEIGHTED_ABS_P20_DIFF = stats::weighted.mean(
+        abs(.data$P20_LEFT - .data$P20_RIGHT),
+        w = pmin(.data$N_LEFT, .data$N_RIGHT)
+      ),
+      WEIGHTED_ABS_P50_DIFF = stats::weighted.mean(
+        abs(.data$P50_LEFT - .data$P50_RIGHT),
+        w = pmin(.data$N_LEFT, .data$N_RIGHT)
+      ),
+      .by = c(
+        "ICAO", "RANGE_NM", "CUT", "PEAK_SEPARATION_DEG",
+        "VALLEY_TO_LOWER_PEAK_RATIO", "PAIRWISE_SEPARATION"
+      )
+    )
+}
+
+study_arrival_results <- purrr::map(
+  available_study_airports,
+  function(airport) {
+    airport_samples <- prepare_apdf_tma_reference_input_from_zip(
+      zipped_archive_path = apdf_archive,
+      files = paste0(airport, "_01-JAN-2024_31-DEC-2024.gz.parquet"),
+      type = "parquet",
+      ranges = c(40, 100)
+    )
+    density <- prepare_tma_bearing_density(
+      tma_samples = airport_samples,
+      airport = airport,
+      phase = "ARR",
+      ranges = c(40, 100),
+      smoothing_bandwidth = smoothing_bandwidth
+    )
+    extrema <- identify_tma_bearing_extrema(
+      tma_density = density,
+      min_relative_prominence = minimum_relative_prominence
+    )
+    proposal <- propose_tma_sector_definitions(
+      tma_density = density,
+      extrema = extrema,
+      rounding_increment = rounding_increment,
+      valley_safety_fraction = valley_safety_fraction
+    )
+    multiscale_cuts <- purrr::map_dfr(
+      analysis_bandwidths,
+      function(bandwidth) {
+        scale_density <- prepare_tma_bearing_density(
+          tma_samples = airport_samples,
+          airport = airport,
+          phase = "ARR",
+          ranges = c(40, 100),
+          smoothing_bandwidth = bandwidth
+        )
+        scale_extrema <- identify_tma_bearing_extrema(
+          tma_density = scale_density,
+          min_relative_prominence = minimum_relative_prominence
+        )
+        mutate(
+          propose_tma_sector_definitions(
+            tma_density = scale_density,
+            extrema = scale_extrema,
+            # Retain raw-scale detail here; final proposals remain rounded to 5 degrees.
+            rounding_increment = 1,
+            valley_safety_fraction = valley_safety_fraction
+          )$cut_audit,
+          SMOOTHING_BANDWIDTH = bandwidth
+        )
+      }
+    )
+
+    list(
+      density = density,
+      proposal = proposal,
+      support = summarise_tma_sector_support(airport_samples, proposal$sector_definitions),
+      multiscale_cuts = multiscale_cuts,
+      boundary_utility = build_boundary_utility(airport_samples, proposal, airport)
+    )
+  }
+) |>
+  stats::setNames(available_study_airports)
+
+study_density <- purrr::imap_dfr(
+  study_arrival_results,
+  function(result, airport) mutate(result$density, ICAO = airport)
+)
+study_cuts <- purrr::imap_dfr(
+  study_arrival_results,
+  function(result, airport) mutate(result$proposal$cut_audit, ICAO = airport)
+)
+study_definitions <- purrr::imap_dfr(
+  study_arrival_results,
+  function(result, airport) mutate(result$proposal$sector_definitions, ICAO = airport)
+)
+study_multiscale_cuts <- purrr::imap_dfr(
+  study_arrival_results,
+  function(result, airport) mutate(result$multiscale_cuts, ICAO = airport)
+)
+study_boundary_utility <- purrr::map_dfr(study_arrival_results, "boundary_utility")
+
+study_cut_stability <- study_cuts |>
+  transmute(ICAO, RANGE_NM, CUT = .data$CUT_ROUNDED) |>
+  purrr::pmap_dfr(function(ICAO, RANGE_NM, CUT) {
+    airport_code <- ICAO
+    range_nm <- RANGE_NM
+    candidate_cut <- CUT
+    tibble::tibble(
+      ICAO = airport_code,
+      RANGE_NM = range_nm,
+      CUT = candidate_cut,
+      N_STABLE_BANDWIDTHS = sum(purrr::map_lgl(
+        analysis_bandwidths,
+        function(bandwidth) {
+          candidates <- study_multiscale_cuts |>
+            filter(
+              .data$ICAO == airport_code,
+              .data$RANGE_NM == range_nm,
+              .data$SMOOTHING_BANDWIDTH == bandwidth
+            ) |>
+            pull(.data$CUT_ROUNDED)
+          any(circular_distance(candidates, candidate_cut) <= rounding_increment)
+        }
+      ))
+    )
+  })
+
+study_boundary_register <- study_boundary_utility |>
+  left_join(study_cut_stability, by = c("ICAO", "RANGE_NM", "CUT")) |>
+  mutate(
+    REVIEW_REASON = case_when(
+      .data$PAIRWISE_SEPARATION < 0.75 ~ "Shallow valley",
+      .data$PEAK_SEPARATION_DEG < 3 * smoothing_bandwidth ~ "Close peaks",
+      .data$N_STABLE_BANDWIDTHS < length(analysis_bandwidths) ~ "Smoothing-sensitive cut",
+      .default = NA_character_
+    )
+  ) |>
+  arrange(.data$ICAO, .data$RANGE_NM, .data$CUT)
+
+study_proposal_register <- study_definitions |>
+  summarise(
+    N_SECTORS = dplyr::n(),
+    PROPOSED_SECTORS = paste(.data$SECTOR, collapse = "; "),
+    NORTH_OVERRUN = first(.data$NORTH_OVERRUN),
+    .by = c("ICAO", "RANGE_NM")
+  ) |>
+  left_join(
+    study_boundary_register |>
+      filter(!is.na(.data$REVIEW_REASON)) |>
+      summarise(
+        REVIEW_CUTS = paste0(.data$CUT, " (", .data$REVIEW_REASON, ")", collapse = "; "),
+        .by = c("ICAO", "RANGE_NM")
+      ),
+    by = c("ICAO", "RANGE_NM")
+  ) |>
+  mutate(
+    REVIEW_CUTS = coalesce(.data$REVIEW_CUTS, "None"),
+    PROPOSAL_STATUS = case_when(
+      .data$REVIEW_CUTS != "None" ~ "Analyst boundary decision required",
+      .data$N_SECTORS > 6 ~ "Analyst complexity review",
+      .default = "Initial proposal ready for approval"
+    )
+  ) |>
+  arrange(.data$ICAO, .data$RANGE_NM)
+
+study_data_availability <- tibble(
+  ICAO = study_airports,
+  DATA_STATUS = if_else(
+    study_airports %in% available_study_airports,
+    "2024 APDF analysed",
+    "2024 APDF extract unavailable"
+  )
+)
+```
+
+```{r}
+#| label: full-study-arrival-density-proposals
+#| fig-width: 12
+#| fig-height: 24
+#| fig-cap: "2024 ARR density and proposed candidate sector boundaries for the 11 study airports available in the APDF archive. Each row is an airport; the columns are the 40 NM and 100 NM crossing horizons. Dashed lines require analyst approval before reference-time generation."
+
+ggplot(
+  study_density,
+  aes(x = .data$BEARING_MID, y = .data$SMOOTHED_N)
+) +
+  geom_line(colour = "#2b6a8a", linewidth = 0.55) +
+  geom_vline(
+    data = study_cuts,
+    aes(xintercept = .data$CUT_ROUNDED),
+    colour = "#c8553d",
+    linewidth = 0.45,
+    linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
+  facet_grid(ICAO ~ RANGE_NM, scales = "free_y", labeller = label_both) +
+  scale_x_continuous(breaks = seq(0, 360, by = 60)) +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = "Study-airport ARR candidate sector boundaries, 2024",
+    subtitle = paste(
+      "Six-degree smoother;", rounding_increment,
+      "degree valley-safe rounding; candidate boundaries only"
+    ),
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Smoothed movements per degree"
+  ) +
+  theme_minimal(base_size = 9) +
+  theme(
+    panel.grid.minor = element_blank(),
+    strip.text.y = element_text(angle = 0)
+  )
+```
+
+```{r}
+#| label: full-study-arrival-proposal-register
+
+study_proposal_register |>
+  transmute(
+    Airport = .data$ICAO,
+    `Range (NM)` = .data$RANGE_NM,
+    `Proposed sectors` = .data$PROPOSED_SECTORS,
+    `North overrun` = .data$NORTH_OVERRUN,
+    `Boundaries for review` = .data$REVIEW_CUTS,
+    Status = .data$PROPOSAL_STATUS
+  ) |>
+  knitr::kable(format = "html")
+```
+
+```{r}
+#| label: full-study-arrival-boundary-decisions
+
+study_boundary_register |>
+  filter(!is.na(.data$REVIEW_REASON)) |>
+  transmute(
+    Airport = .data$ICAO,
+    `Range (NM)` = .data$RANGE_NM,
+    `Candidate cut` = .data$CUT,
+    `Review reason` = .data$REVIEW_REASON,
+    `Peak gap (deg)` = round(.data$PEAK_SEPARATION_DEG, 1),
+    `Valley / lower peak` = scales::percent(.data$VALLEY_TO_LOWER_PEAK_RATIO, accuracy = 0.1),
+    `Stable bandwidths` = .data$N_STABLE_BANDWIDTHS,
+    `Shared cells` = .data$N_SHARED_CELLS,
+    `Weighted |P20 diff| (min)` = round(.data$WEIGHTED_ABS_P20_DIFF, 2),
+    `Weighted |P50 diff| (min)` = round(.data$WEIGHTED_ABS_P50_DIFF, 2)
+  ) |>
+  knitr::kable(format = "html")
+```
+
+```{r}
+#| label: full-study-arrival-data-availability
+
+study_data_availability |>
+  knitr::kable(format = "html")
+```

@@ -88,6 +88,124 @@ test_that("prepare_tma_sector_plot_input filters to one airport-phase-range", {
   expect_equal(nrow(plot_input$sectors), 2L)
 })
 
+test_that("prepare_tma_bearing_histogram counts complete circular bearing bins", {
+  tma_samples <- tibble::tibble(
+    ICAO = c("EGLL", "EGLL", "EGLL", "LSZH"),
+    PHASE = c("ARR", "ARR", "ARR", "ARR"),
+    RANGE_NM = c(40, 40, 100, 40),
+    BEARING = c(0, 359.9, 6, 12),
+    VALID_TMA = c(TRUE, FALSE, TRUE, TRUE)
+  )
+
+  histogram <- prepare_tma_bearing_histogram(
+    tma_samples = tma_samples,
+    airport = "EGLL",
+    phase = "ARR",
+    ranges = c(40, 100),
+    bearing_bin_width = 6
+  )
+
+  expect_equal(nrow(histogram), 120L)
+  expect_equal(dplyr::filter(histogram, .data$RANGE_NM == 40, .data$BIN_ID == 1)$N, 1L)
+  expect_equal(dplyr::filter(histogram, .data$RANGE_NM == 40, .data$BIN_ID == 60)$N, 1L)
+  expect_equal(dplyr::filter(histogram, .data$RANGE_NM == 100, .data$BIN_ID == 2)$N, 1L)
+  expect_true(all(dplyr::filter(histogram, .data$RANGE_NM == 40)$N_BEARINGS == 2L))
+
+  valid_histogram <- prepare_tma_bearing_histogram(
+    tma_samples = tma_samples,
+    airport = "EGLL",
+    phase = "ARR",
+    ranges = 40,
+    bearing_bin_width = 6,
+    valid_only = TRUE
+  )
+
+  expect_equal(dplyr::filter(valid_histogram, .data$BIN_ID == 60)$N, 0L)
+  expect_true(all(valid_histogram$N_BEARINGS == 1L))
+})
+
+test_that("prepare_tma_bearing_density wraps the smoother across North", {
+  tma_samples <- tibble::tibble(
+    ICAO = c("EGLL", "EGLL"),
+    PHASE = c("ARR", "ARR"),
+    RANGE_NM = c(40, 40),
+    BEARING = c(0, 359)
+  )
+
+  density <- prepare_tma_bearing_density(
+    tma_samples = tma_samples,
+    airport = "EGLL",
+    phase = "ARR",
+    ranges = 40,
+    smoothing_bandwidth = 2
+  )
+
+  expect_equal(nrow(density), 360L)
+  expect_equal(sum(density$SMOOTHED_N), 2, tolerance = 1e-8)
+  expect_gt(
+    density$SMOOTHED_N[density$BIN_ID == 1],
+    density$SMOOTHED_N[density$BIN_ID == 180]
+  )
+})
+
+test_that("identify_tma_bearing_extrema measures circular peak prominence", {
+  density <- tibble::tibble(
+    AIRPORT = "EGLL",
+    PHASE = "ARR",
+    RANGE_NM = 40,
+    BIN_ID = 1:8,
+    BEARING_MID = seq(22.5, 337.5, by = 45),
+    SMOOTHED_N = c(10, 1, 6, 1, 0, 1, 4, 1)
+  )
+
+  extrema <- identify_tma_bearing_extrema(
+    tma_density = density,
+    min_relative_prominence = 0.2
+  )
+
+  expect_equal(sum(extrema$EXTREMUM == "PEAK"), 3L)
+  expect_equal(sum(extrema$EXTREMUM == "MINIMUM"), 3L)
+  expect_true(all(extrema$IS_SUBSTANTIAL))
+  expect_equal(
+    extrema$RELATIVE_PROMINENCE[extrema$EXTREMUM == "PEAK" & extrema$BEARING == 22.5],
+    0.9
+  )
+})
+
+test_that("propose_tma_sector_definitions rounds valleys and reports support", {
+  tma_samples <- tibble::tibble(
+    ICAO = rep("EGLL", 20),
+    PHASE = rep("ARR", 20),
+    RANGE_NM = rep(40, 20),
+    BEARING = rep(c(90, 270), each = 10),
+    VALID_TMA = TRUE,
+    CLASS = rep(c("MJ", "H"), each = 10),
+    RWY = rep(c("09L", "27R"), each = 10)
+  )
+
+  density <- prepare_tma_bearing_density(
+    tma_samples = tma_samples,
+    airport = "EGLL",
+    phase = "ARR",
+    ranges = 40,
+    smoothing_bandwidth = 2
+  )
+  extrema <- identify_tma_bearing_extrema(density, min_relative_prominence = 0.02)
+  proposal <- propose_tma_sector_definitions(
+    tma_density = density,
+    extrema = extrema,
+    rounding_increment = 5,
+    valley_safety_fraction = 0.25
+  )
+  support <- summarise_tma_sector_support(tma_samples, proposal$sector_definitions)
+
+  expect_equal(nrow(proposal$sector_definitions), 2L)
+  expect_true(all(grepl("^EGLL-ARR-BRG", proposal$sector_definitions$SECTOR_ID)))
+  expect_true(all(!proposal$sector_definitions$NORTH_OVERRUN))
+  expect_equal(sum(support$sector_summary$N_CROSSINGS), 20L)
+  expect_equal(sum(support$reference_cells$N), 20L)
+})
+
 test_that("build_tma_reference supports both variants and validity flags", {
   tma_samples <- tibble::tibble(
     ICAO = rep("EGLL", 6),
@@ -127,6 +245,7 @@ test_that("build_tma_reference supports both variants and validity flags", {
   )
 
   expect_equal(ref_ganp$N, 6L)
+  expect_equal(ref_ganp$SECTOR_ID, "EGLL-ARR-BRG300-060")
   expect_true(ref_ganp$IS_VALID_SAMPLE)
   expect_false(ref_pbwg$IS_VALID_SAMPLE)
   expect_true(ref_pbwg$REF_TMA < ref_ganp$REF_TMA)
