@@ -5,24 +5,41 @@
 #' @param apdf A prepared APDF tibble.
 #' @param unit Time bin passed to [lubridate::floor_date()], for example
 #'   `"hour"` or `"15 min"`.
+#' @param by_runway When `TRUE`, counts are grouped by runway as well as by
+#'   airport and time bin, and the returned table includes `RWY`.
 #'
 #' @return A tibble with airport, bin, arrivals, departures, and total flights.
 #' @export
-calc_throughput <- function(apdf, unit = "hour") {
-  stop_if_apdf_columns_missing(apdf, required_columns = c("ICAO", "PHASE", "MVT_TIME"))
+calc_throughput <- function(apdf, unit = "hour", by_runway = FALSE) {
+  required_columns <- c("ICAO", "PHASE", "MVT_TIME")
+
+  if (isTRUE(by_runway)) {
+    required_columns <- c(required_columns, "RWY")
+  }
+
+  stop_if_apdf_columns_missing(apdf, required_columns = required_columns)
   assert_single_apdf_icao(apdf, what = "calc_throughput() input")
 
-  tibble::as_tibble(apdf) |>
+  throughput <- tibble::as_tibble(apdf) |>
     dplyr::mutate(
       BIN = lubridate::floor_date(.data$MVT_TIME, unit = unit)
-    ) |>
+    )
+
+  if (isTRUE(by_runway)) {
+    throughput <- dplyr::mutate(throughput, RWY = as.character(.data$RWY))
+    group_columns <- c("ICAO", "BIN", "RWY")
+  } else {
+    group_columns <- c("ICAO", "BIN")
+  }
+
+  throughput |>
     dplyr::summarise(
       ARRS = sum(.data$PHASE %in% "ARR", na.rm = TRUE),
       DEPS = sum(.data$PHASE %in% "DEP", na.rm = TRUE),
-      .by = c("ICAO", "BIN")
+      .by = dplyr::all_of(group_columns)
     ) |>
     dplyr::mutate(FLTS = .data$ARRS + .data$DEPS) |>
-    dplyr::arrange(.data$ICAO, .data$BIN)
+    dplyr::arrange(dplyr::across(dplyr::all_of(group_columns)))
 }
 
 #' Prepare Throughput Load Characteristics
@@ -167,6 +184,8 @@ summarise_load_indices <- function(throughput_loads) {
 #'   `"csv_auto"`.
 #' @param year Optional reporting year filter on the resulting bins.
 #' @param unit Time bin passed to [lubridate::floor_date()].
+#' @param by_runway When `TRUE`, counts are grouped by runway as well as by
+#'   airport and time bin.
 #'
 #' @return A tibble with airport throughput bins.
 #' @export
@@ -175,7 +194,8 @@ prepare_apdf_throughput_zip <- function(
     files = NULL,
     type = c("parquet", "csv", "csv_auto"),
     year = NULL,
-    unit = "hour"
+    unit = "hour",
+    by_runway = FALSE
 ) {
   type <- base::match.arg(type)
 
@@ -195,7 +215,7 @@ prepare_apdf_throughput_zip <- function(
         type = type
       ) |>
         prepare_apdf_traffic_input() |>
-        calc_throughput(unit = unit)
+        calc_throughput(unit = unit, by_runway = by_runway)
 
       if (is.null(year)) {
         return(data)
@@ -284,6 +304,8 @@ write_pbwg_throughput <- function(data, year, output_dir, airport = NULL, region
 #'   `"csv_auto"`.
 #' @param region Region label included in the output file names.
 #' @param unit Time bin passed to [lubridate::floor_date()].
+#' @param by_runway When `TRUE`, counts are grouped by runway as well as by
+#'   airport and time bin.
 #'
 #' @return A named character vector of output file paths.
 #' @export
@@ -295,14 +317,16 @@ create_pbwg_throughput_annual_file <- function(
     files = NULL,
     type = c("parquet", "csv", "csv_auto"),
     region = "EUR",
-    unit = "hour"
+    unit = "hour",
+    by_runway = FALSE
 ) {
   summary_data <- prepare_apdf_throughput_zip(
     zipped_archive_path = zipped_archive_path,
     files = files,
     type = type,
     year = year,
-    unit = unit
+    unit = unit,
+    by_runway = by_runway
   )
 
   if (!base::is.null(airports)) {

@@ -14,6 +14,26 @@ test_that("calc_throughput aggregates movements by airport and time bin", {
   expect_equal(throughput$FLTS, 2L)
 })
 
+test_that("calc_throughput can aggregate 15-minute runway bins", {
+  apdf <- tibble::tibble(
+    ICAO = c("EGLL", "EGLL", "EGLL"),
+    PHASE = c("DEP", "ARR", "ARR"),
+    RWY = c("27L", "27L", "09R"),
+    MVT_TIME = as.POSIXct(
+      c("2025-01-01 10:03:00", "2025-01-01 10:14:00", "2025-01-01 10:17:00"),
+      tz = "UTC"
+    )
+  )
+
+  throughput <- calc_throughput(apdf, unit = "15 mins", by_runway = TRUE)
+
+  expect_equal(names(throughput), c("ICAO", "BIN", "RWY", "ARRS", "DEPS", "FLTS"))
+  expect_equal(nrow(throughput), 2)
+  expect_equal(throughput$RWY, c("27L", "09R"))
+  expect_equal(throughput$ARRS, c(1L, 1L))
+  expect_equal(throughput$DEPS, c(1L, 0L))
+})
+
 test_that("calc_throughput rejects mixed-airport input", {
   apdf <- tibble::tibble(
     ICAO = c("EGLL", "LGAV"),

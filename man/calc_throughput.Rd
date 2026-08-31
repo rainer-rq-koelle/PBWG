@@ -4,13 +4,16 @@
 \alias{calc_throughput}
 \title{Calculate Airport Throughput}
 \usage{
-calc_throughput(apdf, unit = "hour")
+calc_throughput(apdf, unit = "hour", by_runway = FALSE)
 }
 \arguments{
 \item{apdf}{A prepared APDF tibble.}
 
 \item{unit}{Time bin passed to \code{\link[lubridate:round_date]{lubridate::floor_date()}}, for example
 \code{"hour"} or \code{"15 min"}.}
+
+\item{by_runway}{When \code{TRUE}, counts are grouped by runway as well as by
+airport and time bin, and the returned table includes \code{RWY}.}
 }
 \value{
 A tibble with airport, bin, arrivals, departures, and total flights.

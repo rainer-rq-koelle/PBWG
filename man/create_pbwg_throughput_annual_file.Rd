@@ -12,7 +12,8 @@ create_pbwg_throughput_annual_file(
   files = NULL,
   type = c("parquet", "csv", "csv_auto"),
   region = "EUR",
-  unit = "hour"
+  unit = "hour",
+  by_runway = FALSE
 )
 }
 \arguments{
@@ -33,6 +34,9 @@ create_pbwg_throughput_annual_file(
 \item{region}{Region label included in the output file names.}
 
 \item{unit}{Time bin passed to \code{\link[lubridate:round_date]{lubridate::floor_date()}}.}
+
+\item{by_runway}{When \code{TRUE}, counts are grouped by runway as well as by
+airport and time bin.}
 }
 \value{
 A named character vector of output file paths.

@@ -9,7 +9,8 @@ prepare_apdf_throughput_zip(
   files = NULL,
   type = c("parquet", "csv", "csv_auto"),
   year = NULL,
-  unit = "hour"
+  unit = "hour",
+  by_runway = FALSE
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ prepare_apdf_throughput_zip(
 \item{year}{Optional reporting year filter on the resulting bins.}
 
 \item{unit}{Time bin passed to \code{\link[lubridate:round_date]{lubridate::floor_date()}}.}
+
+\item{by_runway}{When \code{TRUE}, counts are grouped by runway as well as by
+airport and time bin.}
 }
 \value{
 A tibble with airport throughput bins.
