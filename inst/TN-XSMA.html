@@ -563,66 +563,66 @@ It may however influence sample sizes required for the determination of the refe
 </section>
 <section id="full-study-airport-arr-review" class="level2">
 <h2 class="anchored" data-anchor-id="full-study-airport-arr-review">Full Study-Airport ARR Review</h2>
-<p>The same proposal workflow is now applied to the complete 2024 ARR study set. The APDF archive currently contains extracts for 11 of the 13 agreed airports: <code>EDDF</code>, <code>EDDM</code>, <code>EGKK</code>, <code>EGLL</code>, <code>EHAM</code>, <code>LEBL</code>, <code>LEMD</code>, <code>LFPG</code>, <code>LIRF</code>, <code>LSZH</code>, and <code>LTFM</code>. <code>LGAV</code> and <code>LPPT</code> remain in the study register, but their 2024 APDF extracts are not present in this archive and therefore cannot yet receive a proposal.</p>
-<p>The density matrix is a proposal-for-approval, not a final sector definition. Every dashed line is a valley-safe rounded candidate boundary. The decision register identifies boundaries requiring an analyst decision because they have a shallow valley, close peaks, or do not persist across the 4, 6, and 8 degree smoothers. Conditional weighted P20 and P50 differences are supporting evidence only; no materiality tolerance is applied at this stage.</p>
+<p>The same proposal workflow is now applied to the complete 13-airport 2024 ARR study set. The central APDF archive provides 11 extracts; the LGAV and LPPT extracts are read from their supplementary APDF archives. The airport-specific source map below makes these inputs explicit, so the complete study set can be reproduced without revisiting source-data discovery.</p>
+<p>The first-round candidates remain a proposal-for-approval, not a final sector definition. The second-round merge screen makes a transparent recommendation for adjacent candidate basins when the valley is not clearly separating flows and their conditional weighted median difference is no more than 80 seconds. This is an analyst-support rule: its recommendations do not replace the operational decision to retain or remove a boundary.</p>
+<section id="merge-evidence" class="level3">
+<h3 class="anchored" data-anchor-id="merge-evidence">Merge Evidence</h3>
+<ul>
+<li>Initial cuts identify local geometry; they are not automatic final sectors.</li>
+<li>The provisional merge screen requires a non-separating valley and conditional weighted P50 difference of no more than 80 seconds.</li>
+<li>For every possible merge, we now calculate the actual effect of pooling both sides on their runway/class P20 references.</li>
+<li>The evidence records the movement-weighted P20 shift, the share of movements shifted by more than 80 seconds, and the largest individual runway/class shift. These values support, but do not replace, the analyst decision.</li>
+<li>A future merge threshold should be based on these pooled effects and checked against operational knowledge, rather than inferred from one visual pattern.</li>
+</ul>
+</section>
+<section id="early-cross-airport-check" class="level3">
+<h3 class="anchored" data-anchor-id="early-cross-airport-check">Early Cross-Airport Check</h3>
+<ul>
+<li>At EDDM, the three suggested merge interiors have weighted pooled P20 shifts of approximately 7–30 seconds, with no more than 0.2% of movements shifted by over 80 seconds. This is supportive evidence for those recommendations.</li>
+<li>At EGKK, the 40 NM suggested merge has a weighted pooled P20 shift of about 12 seconds and affects 0.2% of movements beyond 80 seconds. In contrast, the two retained 100 NM cuts affect approximately 13% and 28% of movements beyond 80 seconds when pooled, supporting their retention.</li>
+<li>The maximum individual runway/class shift may still be large where a cell is sparse. It is therefore a useful audit flag, but should not become a stand- alone acceptance threshold.</li>
+</ul>
+</section>
+<section id="eddf-arr-candidate-sector-review" class="level3">
+<h3 class="anchored" data-anchor-id="eddf-arr-candidate-sector-review">EDDF ARR Candidate Sector Review</h3>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-1.png" class="img-fluid" width="1056"> <strong>EDDF 40 NM shoulder at 125 degrees.</strong> The 125-degree candidate lies between a strong peak near 110 degrees and a weaker shoulder near 138 degrees. The shoulder weakens markedly at broader smoothing, which is consistent with tactical spreading of arrival trajectories. However, its conditional weighted median differs by about 105 seconds, and pooling the two sides would change the P20 reference by more than 80 seconds for 6.2% of the valid movements, including high-support runway/class cells. The sectorisation therefore retains the 125-degree boundary: it preserves meaningful timing variation that may reflect runway alignment and direct crosswind/final shortcuts, rather than treating the visual shoulder as harmless noise.</p>
+</section>
+<section id="eddm-arr-candidate-sector-review" class="level3">
+<h3 class="anchored" data-anchor-id="eddm-arr-candidate-sector-review">EDDM ARR Candidate Sector Review</h3>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-2.png" class="img-fluid" width="1056"> ### EGKK ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-3.png" class="img-fluid" width="1056"> ### EGLL ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-4.png" class="img-fluid" width="1056"> ### EHAM ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-5.png" class="img-fluid" width="1056"> ### LEBL ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-6.png" class="img-fluid" width="1056"> ### LEMD ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-7.png" class="img-fluid" width="1056"> ### LFPG ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-8.png" class="img-fluid" width="1056"> ### LGAV ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-9.png" class="img-fluid" width="1056"> ### LIRF ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-10.png" class="img-fluid" width="1056"> ### LPPT ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-11.png" class="img-fluid" width="1056"> ### LSZH ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-12.png" class="img-fluid" width="1056"> ### LTFM ARR Candidate Sector Review</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-13.png" class="img-fluid" width="1056"></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  study_density,</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> .data<span class="sc">$</span>BEARING_MID, <span class="at">y =</span> .data<span class="sc">$</span>SMOOTHED_N)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#2b6a8a"</span>, <span class="at">linewidth =</span> <span class="fl">0.55</span>) <span class="sc">+</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> study_cuts,</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">xintercept =</span> .data<span class="sc">$</span>CUT_ROUNDED),</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">"#c8553d"</span>,</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.45</span>,</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="st">"dashed"</span>,</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">inherit.aes =</span> <span class="cn">FALSE</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(ICAO <span class="sc">~</span> RANGE_NM, <span class="at">scales =</span> <span class="st">"free_y"</span>, <span class="at">labeller =</span> label_both) <span class="sc">+</span></span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">360</span>, <span class="at">by =</span> <span class="dv">60</span>)) <span class="sc">+</span></span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">360</span>), <span class="at">expand =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Study-airport ARR candidate sector boundaries, 2024"</span>,</span>
-<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste</span>(</span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Six-degree smoother;"</span>, rounding_increment,</span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>      <span class="st">"degree valley-safe rounding; candidate boundaries only"</span></span>
-<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Bearing from aerodrome reference point (degrees)"</span>,</span>
-<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Smoothed movements per degree"</span></span>
-<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">9</span>) <span class="sc">+</span></span>
-<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">0</span>)</span>
-<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="TN-XSMA_files/figure-html/full-study-arrival-density-proposals-1.png" class="img-fluid figure-img" width="1152"></p>
-<figcaption>2024 ARR density and proposed candidate sector boundaries for the 11 study airports available in the APDF archive. Each row is an airport; the columns are the 40 NM and 100 NM crossing horizons. Dashed lines require analyst approval before reference-time generation.</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>study_proposal_register <span class="sc">|&gt;</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">Airport =</span> .data<span class="sc">$</span>ICAO,</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Range (NM)</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>RANGE_NM,</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Proposed sectors</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>PROPOSED_SECTORS,</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">North overrun</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>NORTH_OVERRUN,</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Boundaries for review</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>REVIEW_CUTS,</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Status =</span> .data<span class="sc">$</span>PROPOSAL_STATUS</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>study_proposal_register <span class="sc">|&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">Airport =</span> .data<span class="sc">$</span>ICAO,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Range (NM)</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>RANGE_NM,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Initial sectors</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>INITIAL_SECTORS,</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Suggested merged sectors</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>MERGED_SECTORS,</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Merge cuts</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>MERGE_CUTS,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">North overrun</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>NORTH_OVERRUN,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Boundaries for review</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>REVIEW_CUTS,</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Status =</span> .data<span class="sc">$</span>PROPOSAL_STATUS</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
 <tr class="header">
 <th style="text-align: left;" data-quarto-table-cell-role="th">Airport</th>
 <th style="text-align: right;" data-quarto-table-cell-role="th">Range (NM)</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">Proposed sectors</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Initial sectors</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Suggested merged sectors</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Merge cuts</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">North overrun</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">Boundaries for review</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">Status</th>
@@ -633,6 +633,8 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">EDDF</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG000-085; BRG085-125; BRG125-225; BRG225-300; BRG300-325; BRG325-000</td>
+<td style="text-align: left;">BRG000-085; BRG085-125; BRG125-225; BRG225-300; BRG300-325; BRG325-000</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">125 (Shallow valley); 300 (Shallow valley); 325 (Shallow valley)</td>
 <td style="text-align: left;">Analyst boundary decision required</td>
@@ -641,38 +643,48 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">EDDF</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG000-070; BRG070-095; BRG095-140; BRG140-210; BRG210-270; BRG270-305; BRG305-000</td>
+<td style="text-align: left;">BRG000-095; BRG095-140; BRG140-210; BRG210-305; BRG305-000</td>
+<td style="text-align: left;">70; 270</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">70 (Shallow valley); 270 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EDDM</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG000-080; BRG080-160; BRG160-220; BRG220-260; BRG260-000</td>
+<td style="text-align: left;">BRG000-080; BRG080-160; BRG160-260; BRG260-000</td>
+<td style="text-align: left;">220</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">220 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EDDM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG020-080; BRG080-165; BRG165-220; BRG220-260; BRG260-290; BRG290-335; BRG335-020</td>
+<td style="text-align: left;">BRG080-165; BRG165-220; BRG220-260; BRG260-335; BRG335-080</td>
+<td style="text-align: left;">20; 290</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">20 (Shallow valley); 290 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EGKK</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG000-110; BRG110-170; BRG170-265; BRG265-000</td>
+<td style="text-align: left;">BRG000-170; BRG170-265; BRG265-000</td>
+<td style="text-align: left;">110</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">110 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EGKK</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG000-105; BRG105-165; BRG165-240; BRG240-295; BRG295-000</td>
+<td style="text-align: left;">BRG000-105; BRG105-165; BRG165-240; BRG240-295; BRG295-000</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">105 (Smoothing-sensitive cut); 295 (Smoothing-sensitive cut)</td>
 <td style="text-align: left;">Analyst boundary decision required</td>
@@ -681,6 +693,8 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">EGLL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG000-105; BRG105-165; BRG165-240; BRG240-290; BRG290-000</td>
+<td style="text-align: left;">BRG000-105; BRG105-165; BRG165-240; BRG240-290; BRG290-000</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">105 (Smoothing-sensitive cut)</td>
 <td style="text-align: left;">Analyst boundary decision required</td>
@@ -689,6 +703,8 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">EGLL</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG000-110; BRG110-170; BRG170-225; BRG225-255; BRG255-295; BRG295-000</td>
+<td style="text-align: left;">BRG000-110; BRG110-170; BRG170-225; BRG225-255; BRG255-295; BRG295-000</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">None</td>
 <td style="text-align: left;">Initial proposal ready for approval</td>
@@ -697,6 +713,8 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">EHAM</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG000-150; BRG150-250; BRG250-000</td>
+<td style="text-align: left;">BRG000-150; BRG150-250; BRG250-000</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">None</td>
 <td style="text-align: left;">Initial proposal ready for approval</td>
@@ -705,46 +723,58 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">EHAM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG000-070; BRG070-145; BRG145-195; BRG195-240; BRG240-280; BRG280-310; BRG310-000</td>
+<td style="text-align: left;">BRG000-145; BRG145-195; BRG195-240; BRG240-310; BRG310-000</td>
+<td style="text-align: left;">70; 280</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">70 (Shallow valley); 240 (Smoothing-sensitive cut); 280 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG010-055; BRG055-085; BRG085-150; BRG150-205; BRG205-245; BRG245-265; BRG265-295; BRG295-325; BRG325-350; BRG350-010</td>
+<td style="text-align: left;">BRG150-205; BRG205-265; BRG265-325; BRG325-150</td>
+<td style="text-align: left;">10; 55; 85; 245; 295; 350</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">10 (Shallow valley); 55 (Shallow valley); 85 (Shallow valley); 205 (Shallow valley); 245 (Shallow valley); 265 (Shallow valley); 295 (Shallow valley); 350 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG005-035; BRG035-075; BRG075-115; BRG115-145; BRG145-185; BRG185-215; BRG215-255; BRG255-280; BRG280-325; BRG325-005</td>
+<td style="text-align: left;">BRG035-075; BRG075-115; BRG115-145; BRG145-185; BRG185-215; BRG215-255; BRG255-325; BRG325-035</td>
+<td style="text-align: left;">5; 280</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">5 (Shallow valley); 280 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEMD</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG000-080; BRG080-160; BRG160-220; BRG220-260; BRG260-295; BRG295-000</td>
+<td style="text-align: left;">BRG000-080; BRG080-160; BRG160-260; BRG260-295; BRG295-000</td>
+<td style="text-align: left;">220</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">80 (Shallow valley); 220 (Shallow valley); 260 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEMD</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG000-050; BRG050-070; BRG070-095; BRG095-155; BRG155-200; BRG200-235; BRG235-275; BRG275-330; BRG330-000</td>
+<td style="text-align: left;">BRG000-050; BRG050-095; BRG095-155; BRG155-200; BRG200-235; BRG235-275; BRG275-330; BRG330-000</td>
+<td style="text-align: left;">70</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">0 (Smoothing-sensitive cut); 70 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LFPG</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG000-090; BRG090-170; BRG170-270; BRG270-000</td>
+<td style="text-align: left;">BRG000-090; BRG090-170; BRG170-270; BRG270-000</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">None</td>
 <td style="text-align: left;">Initial proposal ready for approval</td>
@@ -753,14 +783,38 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">LFPG</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG000-050; BRG050-095; BRG095-180; BRG180-260; BRG260-300; BRG300-000</td>
+<td style="text-align: left;">BRG000-095; BRG095-180; BRG180-260; BRG260-300; BRG300-000</td>
+<td style="text-align: left;">50</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">50 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG010-030; BRG030-060; BRG060-090; BRG090-115; BRG115-160; BRG160-205; BRG205-285; BRG285-325; BRG325-010</td>
+<td style="text-align: left;">BRG010-160; BRG160-285; BRG285-325; BRG325-010</td>
+<td style="text-align: left;">30; 60; 90; 115; 205</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">10 (Shallow valley); 30 (Shallow valley); 60 (Shallow valley); 90 (Shallow valley); 115 (Shallow valley); 160 (Shallow valley); 205 (Shallow valley); 325 (Shallow valley)</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG000-045; BRG045-070; BRG070-090; BRG090-135; BRG135-155; BRG155-220; BRG220-300; BRG300-330; BRG330-000</td>
+<td style="text-align: left;">BRG000-045; BRG045-070; BRG070-090; BRG090-155; BRG155-220; BRG220-300; BRG300-330; BRG330-000</td>
+<td style="text-align: left;">135</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">0 (Shallow valley); 70 (Shallow valley); 90 (Shallow valley); 135 (Shallow valley); 155 (Shallow valley); 330 (Shallow valley)</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LIRF</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG035-090; BRG090-175; BRG175-290; BRG290-340; BRG340-035</td>
+<td style="text-align: left;">BRG035-090; BRG090-175; BRG175-290; BRG290-340; BRG340-035</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">90 (Shallow valley)</td>
 <td style="text-align: left;">Analyst boundary decision required</td>
@@ -769,14 +823,38 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">LIRF</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG045-090; BRG090-145; BRG145-175; BRG175-205; BRG205-235; BRG235-280; BRG280-335; BRG335-045</td>
+<td style="text-align: left;">BRG045-090; BRG090-145; BRG145-205; BRG205-280; BRG280-335; BRG335-045</td>
+<td style="text-align: left;">175; 235</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">145 (Shallow valley); 175 (Shallow valley); 235 (Shallow valley)</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG060-120; BRG120-185; BRG185-240; BRG240-325; BRG325-060</td>
+<td style="text-align: left;">BRG060-120; BRG120-185; BRG185-240; BRG240-325; BRG325-060</td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">185 (Shallow valley); 240 (Shallow valley)</td>
+<td style="text-align: left;">Analyst boundary decision required</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG050-095; BRG095-195; BRG195-245; BRG245-340; BRG340-050</td>
+<td style="text-align: left;">BRG050-095; BRG095-195; BRG195-245; BRG245-340; BRG340-050</td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">195 (Smoothing-sensitive cut); 340 (Smoothing-sensitive cut)</td>
 <td style="text-align: left;">Analyst boundary decision required</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LSZH</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG045-110; BRG110-190; BRG190-265; BRG265-325; BRG325-045</td>
+<td style="text-align: left;">BRG045-110; BRG110-190; BRG190-265; BRG265-325; BRG325-045</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">265 (Smoothing-sensitive cut)</td>
 <td style="text-align: left;">Analyst boundary decision required</td>
@@ -785,14 +863,18 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">LSZH</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG020-050; BRG050-115; BRG115-150; BRG150-195; BRG195-255; BRG255-305; BRG305-335; BRG335-020</td>
+<td style="text-align: left;">BRG050-115; BRG115-150; BRG150-195; BRG195-255; BRG255-305; BRG305-335; BRG335-050</td>
+<td style="text-align: left;">20</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">20 (Shallow valley); 305 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LTFM</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG025-100; BRG100-185; BRG185-265; BRG265-330; BRG330-025</td>
+<td style="text-align: left;">BRG025-100; BRG100-185; BRG185-265; BRG265-330; BRG330-025</td>
+<td style="text-align: left;">None</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">100 (Shallow valley); 265 (Shallow valley)</td>
 <td style="text-align: left;">Analyst boundary decision required</td>
@@ -801,30 +883,37 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">LTFM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">BRG000-090; BRG090-130; BRG130-180; BRG180-245; BRG245-275; BRG275-315; BRG315-000</td>
+<td style="text-align: left;">BRG000-090; BRG090-130; BRG130-180; BRG180-245; BRG245-315; BRG315-000</td>
+<td style="text-align: left;">275</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">90 (Shallow valley); 275 (Shallow valley)</td>
-<td style="text-align: left;">Analyst boundary decision required</td>
+<td style="text-align: left;">Merge recommendation requires analyst approval</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>study_boundary_register <span class="sc">|&gt;</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(.data<span class="sc">$</span>REVIEW_REASON)) <span class="sc">|&gt;</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Airport =</span> .data<span class="sc">$</span>ICAO,</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Range (NM)</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>RANGE_NM,</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Candidate cut</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>CUT,</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Review reason</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>REVIEW_REASON,</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Peak gap (deg)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(.data<span class="sc">$</span>PEAK_SEPARATION_DEG, <span class="dv">1</span>),</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Valley / lower peak</span><span class="st">`</span> <span class="ot">=</span> scales<span class="sc">::</span><span class="fu">percent</span>(.data<span class="sc">$</span>VALLEY_TO_LOWER_PEAK_RATIO, <span class="at">accuracy =</span> <span class="fl">0.1</span>),</span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Stable bandwidths</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>N_STABLE_BANDWIDTHS,</span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Shared cells</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>N_SHARED_CELLS,</span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Weighted |P20 diff| (min)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(.data<span class="sc">$</span>WEIGHTED_ABS_P20_DIFF, <span class="dv">2</span>),</span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Weighted |P50 diff| (min)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(.data<span class="sc">$</span>WEIGHTED_ABS_P50_DIFF, <span class="dv">2</span>)</span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>study_boundary_register <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.data<span class="sc">$</span>MERGE_RECOMMENDED <span class="sc">|</span> <span class="sc">!</span><span class="fu">is.na</span>(.data<span class="sc">$</span>REVIEW_REASON)) <span class="sc">|&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Airport =</span> .data<span class="sc">$</span>ICAO,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Range (NM)</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>RANGE_NM,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Candidate cut</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>CUT,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Boundary role</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>BOUNDARY_ROLE,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Merge recommendation</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">if_else</span>(.data<span class="sc">$</span>MERGE_RECOMMENDED, <span class="st">"Merge"</span>, <span class="st">"Retain/review"</span>),</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Review reason</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>REVIEW_REASON,</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Peak gap (deg)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(.data<span class="sc">$</span>PEAK_SEPARATION_DEG, <span class="dv">1</span>),</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Valley / lower peak</span><span class="st">`</span> <span class="ot">=</span> scales<span class="sc">::</span><span class="fu">percent</span>(.data<span class="sc">$</span>VALLEY_TO_LOWER_PEAK_RATIO, <span class="at">accuracy =</span> <span class="fl">0.1</span>),</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Stable bandwidths</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>N_STABLE_BANDWIDTHS,</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Shared cells</span><span class="st">`</span> <span class="ot">=</span> .data<span class="sc">$</span>N_SHARED_CELLS,</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Weighted |P20 diff| (min)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(.data<span class="sc">$</span>WEIGHTED_ABS_P20_DIFF, <span class="dv">2</span>),</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Weighted |P50 diff| (min)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(.data<span class="sc">$</span>WEIGHTED_ABS_P50_DIFF, <span class="dv">2</span>),</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Pooled weighted P20 shift (min)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(.data<span class="sc">$</span>POOL_WEIGHTED_P20_SHIFT, <span class="dv">2</span>),</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Pooled P20 shift &gt;80s</span><span class="st">`</span> <span class="ot">=</span> scales<span class="sc">::</span><span class="fu">percent</span>(.data<span class="sc">$</span>POOL_PCT_P20_SHIFT_OVER_80S, <span class="at">accuracy =</span> <span class="fl">0.1</span>),</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Max pooled P20 shift (min)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(.data<span class="sc">$</span>POOL_MAX_P20_SHIFT, <span class="dv">2</span>)</span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -832,6 +921,8 @@ It may however influence sample sizes required for the determination of the refe
 <th style="text-align: left;" data-quarto-table-cell-role="th">Airport</th>
 <th style="text-align: right;" data-quarto-table-cell-role="th">Range (NM)</th>
 <th style="text-align: right;" data-quarto-table-cell-role="th">Candidate cut</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Boundary role</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Merge recommendation</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">Review reason</th>
 <th style="text-align: right;" data-quarto-table-cell-role="th">Peak gap (deg)</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">Valley / lower peak</th>
@@ -839,6 +930,9 @@ It may however influence sample sizes required for the determination of the refe
 <th style="text-align: right;" data-quarto-table-cell-role="th">Shared cells</th>
 <th style="text-align: right;" data-quarto-table-cell-role="th">Weighted |P20 diff| (min)</th>
 <th style="text-align: right;" data-quarto-table-cell-role="th">Weighted |P50 diff| (min)</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Pooled weighted P20 shift (min)</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Pooled P20 shift &gt;80s</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Max pooled P20 shift (min)</th>
 </tr>
 </thead>
 <tbody>
@@ -846,6 +940,8 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">EDDF</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">125</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">27</td>
 <td style="text-align: left;">58.5%</td>
@@ -853,11 +949,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">1.80</td>
 <td style="text-align: right;">1.75</td>
+<td style="text-align: right;">0.78</td>
+<td style="text-align: left;">6.2%</td>
+<td style="text-align: right;">3.45</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EDDF</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">300</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">35</td>
 <td style="text-align: left;">33.5%</td>
@@ -865,11 +966,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">17</td>
 <td style="text-align: right;">2.08</td>
 <td style="text-align: right;">2.29</td>
+<td style="text-align: right;">0.37</td>
+<td style="text-align: left;">12.5%</td>
+<td style="text-align: right;">3.43</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EDDF</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">325</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">24</td>
 <td style="text-align: left;">61.9%</td>
@@ -877,11 +983,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">14</td>
 <td style="text-align: right;">1.45</td>
 <td style="text-align: right;">1.90</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: left;">4.2%</td>
+<td style="text-align: right;">3.47</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EDDF</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">70</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">41</td>
 <td style="text-align: left;">62.0%</td>
@@ -889,11 +1000,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">18</td>
 <td style="text-align: right;">0.22</td>
 <td style="text-align: right;">0.21</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: left;">0.2%</td>
+<td style="text-align: right;">10.49</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EDDF</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">270</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">28</td>
 <td style="text-align: left;">27.9%</td>
@@ -901,11 +1017,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">0.38</td>
 <td style="text-align: right;">0.42</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: left;">0.1%</td>
+<td style="text-align: right;">6.55</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EDDM</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">220</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: left;">78.5%</td>
@@ -913,11 +1034,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">18</td>
 <td style="text-align: right;">0.61</td>
 <td style="text-align: right;">0.60</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">1.68</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EDDM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">20</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">26</td>
 <td style="text-align: left;">28.6%</td>
@@ -925,11 +1051,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">0.73</td>
 <td style="text-align: right;">0.73</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">5.88</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EDDM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">290</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">32</td>
 <td style="text-align: left;">61.7%</td>
@@ -937,11 +1068,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">18</td>
 <td style="text-align: right;">0.62</td>
 <td style="text-align: right;">0.69</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: left;">0.2%</td>
+<td style="text-align: right;">3.22</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EGKK</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">110</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">30</td>
 <td style="text-align: left;">29.3%</td>
@@ -949,11 +1085,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">12</td>
 <td style="text-align: right;">0.53</td>
 <td style="text-align: right;">0.78</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: left;">0.2%</td>
+<td style="text-align: right;">1.86</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EGKK</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">105</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Smoothing-sensitive cut</td>
 <td style="text-align: right;">56</td>
 <td style="text-align: left;">0.7%</td>
@@ -961,11 +1102,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">12</td>
 <td style="text-align: right;">2.69</td>
 <td style="text-align: right;">3.74</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: left;">27.6%</td>
+<td style="text-align: right;">3.08</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EGKK</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">295</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Smoothing-sensitive cut</td>
 <td style="text-align: right;">63</td>
 <td style="text-align: left;">0.8%</td>
@@ -973,11 +1119,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">8</td>
 <td style="text-align: right;">2.94</td>
 <td style="text-align: right;">3.52</td>
+<td style="text-align: right;">0.66</td>
+<td style="text-align: left;">13.0%</td>
+<td style="text-align: right;">15.19</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EGLL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">105</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Smoothing-sensitive cut</td>
 <td style="text-align: right;">54</td>
 <td style="text-align: left;">3.2%</td>
@@ -985,11 +1136,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">8</td>
 <td style="text-align: right;">0.63</td>
 <td style="text-align: right;">0.72</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">1.00</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EHAM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">70</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">48</td>
 <td style="text-align: left;">32.3%</td>
@@ -997,11 +1153,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">34</td>
 <td style="text-align: right;">0.73</td>
 <td style="text-align: right;">0.82</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: left;">0.1%</td>
+<td style="text-align: right;">28.59</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EHAM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">240</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Smoothing-sensitive cut</td>
 <td style="text-align: right;">53</td>
 <td style="text-align: left;">0.2%</td>
@@ -1009,11 +1170,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">35</td>
 <td style="text-align: right;">2.23</td>
 <td style="text-align: right;">2.49</td>
+<td style="text-align: right;">1.03</td>
+<td style="text-align: left;">14.5%</td>
+<td style="text-align: right;">7.97</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">EHAM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">280</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">25</td>
 <td style="text-align: left;">37.4%</td>
@@ -1021,11 +1187,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">30</td>
 <td style="text-align: right;">0.84</td>
 <td style="text-align: right;">0.92</td>
+<td style="text-align: right;">0.38</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">4.48</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">10</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">35</td>
 <td style="text-align: left;">89.1%</td>
@@ -1033,11 +1204,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">14</td>
 <td style="text-align: right;">0.61</td>
 <td style="text-align: right;">0.38</td>
+<td style="text-align: right;">0.21</td>
+<td style="text-align: left;">0.9%</td>
+<td style="text-align: right;">6.76</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">55</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">31</td>
 <td style="text-align: left;">33.3%</td>
@@ -1045,11 +1221,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">0.56</td>
 <td style="text-align: right;">0.71</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">5.01</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">85</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">25</td>
 <td style="text-align: left;">42.9%</td>
@@ -1057,11 +1238,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">14</td>
 <td style="text-align: right;">0.64</td>
 <td style="text-align: right;">0.31</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: left;">3.4%</td>
+<td style="text-align: right;">6.90</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">205</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">36</td>
 <td style="text-align: left;">36.6%</td>
@@ -1069,11 +1255,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">17</td>
 <td style="text-align: right;">1.58</td>
 <td style="text-align: right;">1.51</td>
+<td style="text-align: right;">0.66</td>
+<td style="text-align: left;">0.3%</td>
+<td style="text-align: right;">13.35</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">245</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">30</td>
 <td style="text-align: left;">84.2%</td>
@@ -1081,11 +1272,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">11</td>
 <td style="text-align: right;">0.44</td>
 <td style="text-align: right;">0.31</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: left;">0.1%</td>
+<td style="text-align: right;">18.19</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">265</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">29</td>
 <td style="text-align: left;">71.1%</td>
@@ -1093,11 +1289,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">11</td>
 <td style="text-align: right;">0.78</td>
 <td style="text-align: right;">1.39</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">19.38</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">295</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">21</td>
 <td style="text-align: left;">84.9%</td>
@@ -1105,11 +1306,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">13</td>
 <td style="text-align: right;">0.63</td>
 <td style="text-align: right;">0.61</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: left;">0.8%</td>
+<td style="text-align: right;">5.06</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">350</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">24</td>
 <td style="text-align: left;">84.3%</td>
@@ -1117,11 +1323,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">11</td>
 <td style="text-align: right;">0.17</td>
 <td style="text-align: right;">0.51</td>
+<td style="text-align: right;">0.02</td>
+<td style="text-align: left;">0.1%</td>
+<td style="text-align: right;">4.48</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">5</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">24</td>
 <td style="text-align: left;">35.4%</td>
@@ -1129,11 +1340,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">14</td>
 <td style="text-align: right;">0.36</td>
 <td style="text-align: right;">0.38</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">3.74</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEBL</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">280</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">25</td>
 <td style="text-align: left;">48.0%</td>
@@ -1141,11 +1357,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">14</td>
 <td style="text-align: right;">0.70</td>
 <td style="text-align: right;">0.87</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">4.81</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEMD</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">80</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">36</td>
 <td style="text-align: left;">86.2%</td>
@@ -1153,11 +1374,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">19</td>
 <td style="text-align: right;">2.14</td>
 <td style="text-align: right;">2.25</td>
+<td style="text-align: right;">0.66</td>
+<td style="text-align: left;">25.5%</td>
+<td style="text-align: right;">6.76</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEMD</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">220</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">26</td>
 <td style="text-align: left;">80.8%</td>
@@ -1165,11 +1391,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">16</td>
 <td style="text-align: right;">0.87</td>
 <td style="text-align: right;">0.89</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: left;">1.0%</td>
+<td style="text-align: right;">4.48</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEMD</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">260</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">48</td>
 <td style="text-align: left;">27.9%</td>
@@ -1177,11 +1408,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">2.04</td>
 <td style="text-align: right;">2.58</td>
+<td style="text-align: right;">1.03</td>
+<td style="text-align: left;">41.3%</td>
+<td style="text-align: right;">5.30</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LEMD</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">0</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Smoothing-sensitive cut</td>
 <td style="text-align: right;">48</td>
 <td style="text-align: left;">1.5%</td>
@@ -1189,11 +1425,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">18</td>
 <td style="text-align: right;">2.56</td>
 <td style="text-align: right;">3.25</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: left;">8.5%</td>
+<td style="text-align: right;">8.21</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LEMD</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">70</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">19</td>
 <td style="text-align: left;">76.5%</td>
@@ -1201,11 +1442,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">0.80</td>
 <td style="text-align: right;">0.83</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">4.60</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LFPG</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">50</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">29</td>
 <td style="text-align: left;">47.6%</td>
@@ -1213,11 +1459,254 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">26</td>
 <td style="text-align: right;">0.31</td>
 <td style="text-align: right;">0.41</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">9.60</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: left;">83.3%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">0.74</td>
+<td style="text-align: right;">1.59</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: left;">0.9%</td>
+<td style="text-align: right;">2.33</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: left;">58.7%</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">0.30</td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: left;">1.6%</td>
+<td style="text-align: right;">2.67</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: left;">86.1%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: left;">0.1%</td>
+<td style="text-align: right;">5.11</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">90</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: left;">53.8%</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: right;">1.22</td>
+<td style="text-align: right;">0.34</td>
+<td style="text-align: left;">3.0%</td>
+<td style="text-align: right;">1.94</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: left;">75.2%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: right;">1.26</td>
+<td style="text-align: right;">0.22</td>
+<td style="text-align: left;">1.1%</td>
+<td style="text-align: right;">3.80</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: left;">30.1%</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">1.81</td>
+<td style="text-align: right;">2.14</td>
+<td style="text-align: right;">0.79</td>
+<td style="text-align: left;">9.6%</td>
+<td style="text-align: right;">8.38</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">205</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: left;">25.7%</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">0.36</td>
+<td style="text-align: right;">0.48</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: left;">0.6%</td>
+<td style="text-align: right;">9.77</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">325</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: left;">54.2%</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">1.47</td>
+<td style="text-align: right;">1.73</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: left;">1.6%</td>
+<td style="text-align: right;">2.88</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: left;">66.5%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">1.71</td>
+<td style="text-align: right;">1.98</td>
+<td style="text-align: right;">0.42</td>
+<td style="text-align: left;">12.8%</td>
+<td style="text-align: right;">3.58</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">87.4%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">1.32</td>
+<td style="text-align: right;">1.40</td>
+<td style="text-align: right;">0.51</td>
+<td style="text-align: left;">1.2%</td>
+<td style="text-align: right;">4.83</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">90</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: left;">39.0%</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">2.30</td>
+<td style="text-align: right;">2.41</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: left;">8.5%</td>
+<td style="text-align: right;">5.12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">135</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: left;">77.9%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.56</td>
+<td style="text-align: right;">0.66</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: left;">2.0%</td>
+<td style="text-align: right;">6.83</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">155</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: left;">90.2%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">1.60</td>
+<td style="text-align: right;">1.81</td>
+<td style="text-align: right;">0.75</td>
+<td style="text-align: left;">14.4%</td>
+<td style="text-align: right;">4.21</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">330</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: left;">71.8%</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">1.14</td>
+<td style="text-align: right;">1.39</td>
+<td style="text-align: right;">0.56</td>
+<td style="text-align: left;">0.8%</td>
+<td style="text-align: right;">2.08</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LIRF</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">90</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">44</td>
 <td style="text-align: left;">31.7%</td>
@@ -1225,11 +1714,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">16</td>
 <td style="text-align: right;">1.82</td>
 <td style="text-align: right;">2.08</td>
+<td style="text-align: right;">0.53</td>
+<td style="text-align: left;">11.2%</td>
+<td style="text-align: right;">13.76</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LIRF</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">145</td>
+<td style="text-align: left;">Suggested merged-family edge</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">50</td>
 <td style="text-align: left;">33.0%</td>
@@ -1237,11 +1731,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">10</td>
 <td style="text-align: right;">1.39</td>
 <td style="text-align: right;">1.58</td>
+<td style="text-align: right;">0.36</td>
+<td style="text-align: left;">0.1%</td>
+<td style="text-align: right;">9.01</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LIRF</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">175</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">23</td>
 <td style="text-align: left;">67.7%</td>
@@ -1249,11 +1748,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">8</td>
 <td style="text-align: right;">0.21</td>
 <td style="text-align: right;">0.64</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">1.12</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LIRF</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">235</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">29</td>
 <td style="text-align: left;">52.5%</td>
@@ -1261,11 +1765,84 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">12</td>
 <td style="text-align: right;">0.54</td>
 <td style="text-align: right;">0.52</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">9.83</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">185</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: left;">78.1%</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.89</td>
+<td style="text-align: right;">1.50</td>
+<td style="text-align: right;">0.42</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">1.02</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">240</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Shallow valley</td>
+<td style="text-align: right;">88</td>
+<td style="text-align: left;">47.0%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1.69</td>
+<td style="text-align: right;">2.07</td>
+<td style="text-align: right;">0.85</td>
+<td style="text-align: left;">10.6%</td>
+<td style="text-align: right;">3.02</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">195</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Smoothing-sensitive cut</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: left;">24.5%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1.26</td>
+<td style="text-align: right;">1.58</td>
+<td style="text-align: right;">0.61</td>
+<td style="text-align: left;">0.4%</td>
+<td style="text-align: right;">2.74</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">340</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
+<td style="text-align: left;">Smoothing-sensitive cut</td>
+<td style="text-align: right;">109</td>
+<td style="text-align: left;">0.2%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">3.50</td>
+<td style="text-align: right;">4.26</td>
+<td style="text-align: right;">0.89</td>
+<td style="text-align: left;">9.6%</td>
+<td style="text-align: right;">6.14</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LSZH</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">265</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Smoothing-sensitive cut</td>
 <td style="text-align: right;">56</td>
 <td style="text-align: left;">0.9%</td>
@@ -1273,11 +1850,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">16</td>
 <td style="text-align: right;">1.97</td>
 <td style="text-align: right;">2.12</td>
+<td style="text-align: right;">0.87</td>
+<td style="text-align: left;">4.5%</td>
+<td style="text-align: right;">5.34</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LSZH</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">20</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">25</td>
 <td style="text-align: left;">44.3%</td>
@@ -1285,11 +1867,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">0.89</td>
 <td style="text-align: right;">0.95</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: left;">0.2%</td>
+<td style="text-align: right;">10.24</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LSZH</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">305</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">29</td>
 <td style="text-align: left;">26.1%</td>
@@ -1297,11 +1884,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">16</td>
 <td style="text-align: right;">1.39</td>
 <td style="text-align: right;">1.47</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: left;">0.3%</td>
+<td style="text-align: right;">5.33</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LTFM</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">100</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">53</td>
 <td style="text-align: left;">45.3%</td>
@@ -1309,11 +1901,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">3.86</td>
 <td style="text-align: right;">4.90</td>
+<td style="text-align: right;">1.26</td>
+<td style="text-align: left;">36.7%</td>
+<td style="text-align: right;">13.51</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LTFM</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">265</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">43</td>
 <td style="text-align: left;">54.5%</td>
@@ -1321,11 +1918,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">19</td>
 <td style="text-align: right;">2.39</td>
 <td style="text-align: right;">2.94</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: left;">36.7%</td>
+<td style="text-align: right;">4.77</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LTFM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">90</td>
+<td style="text-align: left;">Retained candidate boundary</td>
+<td style="text-align: left;">Retain/review</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">32</td>
 <td style="text-align: left;">45.8%</td>
@@ -1333,11 +1935,16 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">2.24</td>
 <td style="text-align: right;">3.00</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">25.6%</td>
+<td style="text-align: right;">5.50</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LTFM</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">275</td>
+<td style="text-align: left;">Suggested merge interior</td>
+<td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">30</td>
 <td style="text-align: left;">33.0%</td>
@@ -1345,14 +1952,17 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">18</td>
 <td style="text-align: right;">0.94</td>
 <td style="text-align: right;">1.03</td>
+<td style="text-align: right;">0.36</td>
+<td style="text-align: left;">0.7%</td>
+<td style="text-align: right;">6.33</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>study_data_availability <span class="sc">|&gt;</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>study_data_availability <span class="sc">|&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -1396,7 +2006,7 @@ It may however influence sample sizes required for the determination of the refe
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LGAV</td>
-<td style="text-align: left;">2024 APDF extract unavailable</td>
+<td style="text-align: left;">2024 APDF analysed</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LIRF</td>
@@ -1404,7 +2014,7 @@ It may however influence sample sizes required for the determination of the refe
 </tr>
 <tr class="odd">
 <td style="text-align: left;">LPPT</td>
-<td style="text-align: left;">2024 APDF extract unavailable</td>
+<td style="text-align: left;">2024 APDF analysed</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LSZH</td>
@@ -1418,6 +2028,7 @@ It may however influence sample sizes required for the determination of the refe
 </table>
 </div>
 </div>
+</section>
 </section>
 
 </main>

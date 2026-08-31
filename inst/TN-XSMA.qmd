@@ -720,19 +720,18 @@ lszh_boundary_utility |>
 
 ## Full Study-Airport ARR Review
 
-The same proposal workflow is now applied to the complete 2024 ARR study set.
-The APDF archive currently contains extracts for 11 of the 13 agreed airports:
-`EDDF`, `EDDM`, `EGKK`, `EGLL`, `EHAM`, `LEBL`, `LEMD`, `LFPG`, `LIRF`, `LSZH`,
-and `LTFM`. `LGAV` and `LPPT` remain in the study register, but their 2024 APDF
-extracts are not present in this archive and therefore cannot yet receive a
-proposal.
+The same proposal workflow is now applied to the complete 13-airport 2024 ARR
+study set. The central APDF archive provides 11 extracts; the LGAV and LPPT
+extracts are read from their supplementary APDF archives. The airport-specific
+source map below makes these inputs explicit, so the complete study set can be
+reproduced without revisiting source-data discovery.
 
-The density matrix is a proposal-for-approval, not a final sector definition.
-Every dashed line is a valley-safe rounded candidate boundary. The decision
-register identifies boundaries requiring an analyst decision because they have
-a shallow valley, close peaks, or do not persist across the 4, 6, and 8 degree
-smoothers. Conditional weighted P20 and P50 differences are supporting
-evidence only; no materiality tolerance is applied at this stage.
+The first-round candidates remain a proposal-for-approval, not a final sector
+definition. The second-round merge screen makes a transparent recommendation
+for adjacent candidate basins when the valley is not clearly separating flows
+and their conditional weighted median difference is no more than 80 seconds.
+This is an analyst-support rule: its recommendations do not replace the
+operational decision to retain or remove a boundary.
 
 ```{r}
 #| label: full-study-arrival-input
@@ -742,11 +741,34 @@ study_airports <- c(
   "EDDF", "EDDM", "EGKK", "EGLL", "EHAM", "LEBL", "LEMD",
   "LFPG", "LGAV", "LIRF", "LPPT", "LSZH", "LTFM"
 )
-available_study_airports <- setdiff(study_airports, c("LGAV", "LPPT"))
+lgav_apdf_archive <- Sys.getenv(
+  "PBWG_APDF_LGAV_2024",
+  unset = "/Users/rainerkoelle/RProjects/__DATA/APDF/apdf-LGAV-2019-2024.zip"
+)
+lppt_apdf_archive <- Sys.getenv(
+  "PBWG_APDF_LPPT_2024",
+  unset = "/Users/rainerkoelle/RProjects/__DATA/APDF/LPPT-apdf.zip"
+)
+study_airport_sources <- tibble::tibble(
+  ICAO = study_airports,
+  ARCHIVE = dplyr::case_when(
+    .data$ICAO == "LGAV" ~ lgav_apdf_archive,
+    .data$ICAO == "LPPT" ~ lppt_apdf_archive,
+    .default = apdf_archive
+  ),
+  FILE = dplyr::case_when(
+    .data$ICAO == "LGAV" ~ "LGAV_01-JAN-2024_31-DEC-2024.parquet",
+    .data$ICAO == "LPPT" ~ "LPPT_01-JAN-2024_31-DEC-2024.gz.parquet",
+    .default = paste0(.data$ICAO, "_01-JAN-2024_31-DEC-2024.gz.parquet")
+  )
+)
 
 circular_distance <- function(first, second) {
   abs(((first - second + 180) %% 360) - 180)
 }
+
+median_merge_threshold_minutes <- 80 / 60
+minimum_valley_to_lower_peak_ratio <- 0.25
 
 build_boundary_utility <- function(samples, proposal, airport) {
   assigned_samples <- summarise_tma_sector_support(
@@ -784,7 +806,7 @@ build_boundary_utility <- function(samples, proposal, airport) {
       RIGHT_SECTOR = .data$SECTOR
     )
 
-  boundary_pairs |>
+  pairwise_utility <- boundary_pairs |>
     left_join(
       cell_references |>
         rename(
@@ -821,14 +843,55 @@ build_boundary_utility <- function(samples, proposal, airport) {
         "VALLEY_TO_LOWER_PEAK_RATIO", "PAIRWISE_SEPARATION"
       )
     )
+
+  pooling_impact <- purrr::pmap_dfr(
+    boundary_pairs,
+    function(
+        ICAO, RANGE_NM, CUT, PEAK_SEPARATION_DEG,
+        VALLEY_TO_LOWER_PEAK_RATIO, PAIRWISE_SEPARATION,
+        LEFT_SECTOR, RIGHT_SECTOR
+    ) {
+      pooled_samples <- assigned_samples |>
+        filter(
+          .data$VALID_TMA,
+          .data$SECTOR %in% c(LEFT_SECTOR, RIGHT_SECTOR)
+        )
+      sector_references <- pooled_samples |>
+        summarise(
+          N = dplyr::n(),
+          P20 = as.numeric(stats::quantile(.data$TMA_TIME, probs = 0.20, names = FALSE)),
+          .by = c("SECTOR", "RWY", "CLASS")
+        )
+      pooled_references <- pooled_samples |>
+        summarise(
+          P20_POOLED = as.numeric(stats::quantile(.data$TMA_TIME, probs = 0.20, names = FALSE)),
+          .by = c("RWY", "CLASS")
+        )
+
+      sector_references |>
+        left_join(pooled_references, by = c("RWY", "CLASS")) |>
+        mutate(P20_SHIFT = abs(.data$P20 - .data$P20_POOLED)) |>
+        summarise(
+          N_POOL_MOVEMENTS = sum(.data$N),
+          POOL_WEIGHTED_P20_SHIFT = stats::weighted.mean(.data$P20_SHIFT, .data$N),
+          POOL_PCT_P20_SHIFT_OVER_80S = sum(.data$N[.data$P20_SHIFT > 80 / 60]) / sum(.data$N),
+          POOL_MAX_P20_SHIFT = max(.data$P20_SHIFT)
+        ) |>
+        mutate(ICAO = ICAO, RANGE_NM = RANGE_NM, CUT = CUT)
+    }
+  )
+
+  pairwise_utility |>
+    left_join(pooling_impact, by = c("ICAO", "RANGE_NM", "CUT"))
 }
 
 study_arrival_results <- purrr::map(
-  available_study_airports,
+  study_airport_sources$ICAO,
   function(airport) {
+    airport_source <- filter(study_airport_sources, .data$ICAO == airport)
     airport_samples <- prepare_apdf_tma_reference_input_from_zip(
-      zipped_archive_path = apdf_archive,
-      files = paste0(airport, "_01-JAN-2024_31-DEC-2024.gz.parquet"),
+      zipped_archive_path = airport_source$ARCHIVE[[1]],
+      files = airport_source$FILE[[1]],
       type = "parquet",
       ranges = c(40, 100)
     )
@@ -885,7 +948,7 @@ study_arrival_results <- purrr::map(
     )
   }
 ) |>
-  stats::setNames(available_study_airports)
+  stats::setNames(study_airport_sources$ICAO)
 
 study_density <- purrr::imap_dfr(
   study_arrival_results,
@@ -931,7 +994,25 @@ study_cut_stability <- study_cuts |>
     )
   })
 
-study_boundary_register <- study_boundary_utility |>
+study_boundary_register <- study_cuts |>
+  transmute(
+    ICAO, RANGE_NM,
+    CUT = .data$CUT_ROUNDED,
+    PEAK_SEPARATION_DEG = .data$PEAK_SEPARATION_DEG,
+    VALLEY_TO_LOWER_PEAK_RATIO = .data$VALLEY_TO_LOWER_PEAK_RATIO,
+    PAIRWISE_SEPARATION = .data$PAIRWISE_SEPARATION
+  ) |>
+  left_join(
+    study_boundary_utility |>
+      select(
+        .data$ICAO, .data$RANGE_NM, .data$CUT,
+        .data$N_SHARED_CELLS, .data$MIN_SHARED_CELL_N,
+        .data$WEIGHTED_ABS_P20_DIFF, .data$WEIGHTED_ABS_P50_DIFF,
+        .data$N_POOL_MOVEMENTS, .data$POOL_WEIGHTED_P20_SHIFT,
+        .data$POOL_PCT_P20_SHIFT_OVER_80S, .data$POOL_MAX_P20_SHIFT
+      ),
+    by = c("ICAO", "RANGE_NM", "CUT")
+  ) |>
   left_join(study_cut_stability, by = c("ICAO", "RANGE_NM", "CUT")) |>
   mutate(
     REVIEW_REASON = case_when(
@@ -939,16 +1020,56 @@ study_boundary_register <- study_boundary_utility |>
       .data$PEAK_SEPARATION_DEG < 3 * smoothing_bandwidth ~ "Close peaks",
       .data$N_STABLE_BANDWIDTHS < length(analysis_bandwidths) ~ "Smoothing-sensitive cut",
       .default = NA_character_
-    )
+    ),
+    MERGE_RECOMMENDED =
+      .data$VALLEY_TO_LOWER_PEAK_RATIO >= minimum_valley_to_lower_peak_ratio &
+      !is.na(.data$WEIGHTED_ABS_P50_DIFF) &
+      .data$WEIGHTED_ABS_P50_DIFF <= median_merge_threshold_minutes
+  ) |>
+  arrange(.data$ICAO, .data$RANGE_NM, .data$CUT) |>
+  mutate(
+    MERGED_FAMILY_EDGE = !.data$MERGE_RECOMMENDED & (
+      dplyr::lag(.data$MERGE_RECOMMENDED, default = dplyr::last(.data$MERGE_RECOMMENDED)) |
+        dplyr::lead(.data$MERGE_RECOMMENDED, default = dplyr::first(.data$MERGE_RECOMMENDED))
+    ),
+    BOUNDARY_ROLE = case_when(
+      .data$MERGE_RECOMMENDED ~ "Suggested merge interior",
+      .data$MERGED_FAMILY_EDGE ~ "Suggested merged-family edge",
+      .default = "Retained candidate boundary"
+    ),
+    .by = c("ICAO", "RANGE_NM")
   ) |>
   arrange(.data$ICAO, .data$RANGE_NM, .data$CUT)
 
+build_merged_sector_labels <- function(cuts) {
+  cuts <- sort(unique(cuts %% 360))
+  next_cuts <- c(cuts[-1], cuts[[1]])
+  paste(build_tma_sector_label(cuts, next_cuts), collapse = "; ")
+}
+
+study_merged_sector_register <- study_boundary_register |>
+  filter(!.data$MERGE_RECOMMENDED) |>
+  summarise(
+    MERGED_SECTORS = build_merged_sector_labels(.data$CUT),
+    .by = c("ICAO", "RANGE_NM")
+  )
+
 study_proposal_register <- study_definitions |>
   summarise(
-    N_SECTORS = dplyr::n(),
-    PROPOSED_SECTORS = paste(.data$SECTOR, collapse = "; "),
+    N_INITIAL_SECTORS = dplyr::n(),
+    INITIAL_SECTORS = paste(.data$SECTOR, collapse = "; "),
     NORTH_OVERRUN = first(.data$NORTH_OVERRUN),
     .by = c("ICAO", "RANGE_NM")
+  ) |>
+  left_join(study_merged_sector_register, by = c("ICAO", "RANGE_NM")) |>
+  left_join(
+    study_boundary_register |>
+      filter(.data$MERGE_RECOMMENDED) |>
+      summarise(
+        MERGE_CUTS = paste(.data$CUT, collapse = "; "),
+        .by = c("ICAO", "RANGE_NM")
+      ),
+    by = c("ICAO", "RANGE_NM")
   ) |>
   left_join(
     study_boundary_register |>
@@ -960,10 +1081,13 @@ study_proposal_register <- study_definitions |>
     by = c("ICAO", "RANGE_NM")
   ) |>
   mutate(
+    MERGE_CUTS = coalesce(.data$MERGE_CUTS, "None"),
     REVIEW_CUTS = coalesce(.data$REVIEW_CUTS, "None"),
+    N_MERGED_SECTORS = stringr::str_count(.data$MERGED_SECTORS, ";") + 1L,
     PROPOSAL_STATUS = case_when(
+      .data$MERGE_CUTS != "None" ~ "Merge recommendation requires analyst approval",
       .data$REVIEW_CUTS != "None" ~ "Analyst boundary decision required",
-      .data$N_SECTORS > 6 ~ "Analyst complexity review",
+      .data$N_INITIAL_SECTORS > 6 ~ "Analyst complexity review",
       .default = "Initial proposal ready for approval"
     )
   ) |>
@@ -971,50 +1095,110 @@ study_proposal_register <- study_definitions |>
 
 study_data_availability <- tibble(
   ICAO = study_airports,
-  DATA_STATUS = if_else(
-    study_airports %in% available_study_airports,
-    "2024 APDF analysed",
-    "2024 APDF extract unavailable"
-  )
+  DATA_STATUS = "2024 APDF analysed"
 )
 ```
 
+### Merge Evidence
+
+- Initial cuts identify local geometry; they are not automatic final sectors.
+- The provisional merge screen requires a non-separating valley and conditional
+  weighted P50 difference of no more than 80 seconds.
+- For every possible merge, we now calculate the actual effect of pooling both
+  sides on their runway/class P20 references.
+- The evidence records the movement-weighted P20 shift, the share of movements
+  shifted by more than 80 seconds, and the largest individual runway/class
+  shift. These values support, but do not replace, the analyst decision.
+- A future merge threshold should be based on these pooled effects and checked
+  against operational knowledge, rather than inferred from one visual pattern.
+
+### Early Cross-Airport Check
+
+- At EDDM, the three suggested merge interiors have weighted pooled P20 shifts
+  of approximately 7--30 seconds, with no more than 0.2% of movements shifted
+  by over 80 seconds. This is supportive evidence for those recommendations.
+- At EGKK, the 40 NM suggested merge has a weighted pooled P20 shift of about
+  12 seconds and affects 0.2% of movements beyond 80 seconds. In contrast, the
+  two retained 100 NM cuts affect approximately 13% and 28% of movements beyond
+  80 seconds when pooled, supporting their retention.
+- The maximum individual runway/class shift may still be large where a cell is
+  sparse. It is therefore a useful audit flag, but should not become a stand-
+  alone acceptance threshold.
+
 ```{r}
 #| label: full-study-arrival-density-proposals
-#| fig-width: 12
-#| fig-height: 24
-#| fig-cap: "2024 ARR density and proposed candidate sector boundaries for the 11 study airports available in the APDF archive. Each row is an airport; the columns are the 40 NM and 100 NM crossing horizons. Dashed lines require analyst approval before reference-time generation."
+#| fig-width: 11
+#| fig-height: 7
+#| echo: false
+#| results: asis
 
-ggplot(
-  study_density,
-  aes(x = .data$BEARING_MID, y = .data$SMOOTHED_N)
-) +
-  geom_line(colour = "#2b6a8a", linewidth = 0.55) +
-  geom_vline(
-    data = study_cuts,
-    aes(xintercept = .data$CUT_ROUNDED),
-    colour = "#c8553d",
-    linewidth = 0.45,
-    linetype = "dashed",
-    inherit.aes = FALSE
-  ) +
-  facet_grid(ICAO ~ RANGE_NM, scales = "free_y", labeller = label_both) +
-  scale_x_continuous(breaks = seq(0, 360, by = 60)) +
-  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
-  labs(
-    title = "Study-airport ARR candidate sector boundaries, 2024",
-    subtitle = paste(
-      "Six-degree smoother;", rounding_increment,
-      "degree valley-safe rounding; candidate boundaries only"
-    ),
-    x = "Bearing from aerodrome reference point (degrees)",
-    y = "Smoothed movements per degree"
-  ) +
-  theme_minimal(base_size = 9) +
-  theme(
-    panel.grid.minor = element_blank(),
-    strip.text.y = element_text(angle = 0)
-  )
+plot_arrival_sector_review <- function(airport) {
+  airport_density <- study_density |>
+    filter(.data$ICAO == airport) |>
+    mutate(RANGE_NM = factor(.data$RANGE_NM, levels = c(100, 40)))
+  airport_cuts <- study_boundary_register |>
+    filter(.data$ICAO == airport) |>
+    mutate(RANGE_NM = factor(.data$RANGE_NM, levels = c(100, 40)))
+
+  ggplot(airport_density, aes(x = .data$BEARING_MID, y = .data$SMOOTHED_N)) +
+    geom_line(colour = "#2b6a8a", linewidth = 0.8) +
+    geom_vline(
+      data = airport_cuts,
+      aes(xintercept = .data$CUT),
+      colour = "#c8553d",
+      linewidth = 0.5,
+      linetype = "dashed",
+      inherit.aes = FALSE
+    ) +
+    geom_vline(
+      data = filter(airport_cuts, .data$MERGE_RECOMMENDED),
+      aes(xintercept = .data$CUT),
+      colour = "#8c8c8c",
+      linewidth = 0.9,
+      linetype = "dotted",
+      inherit.aes = FALSE
+    ) +
+    geom_vline(
+      data = filter(airport_cuts, .data$MERGED_FAMILY_EDGE),
+      aes(xintercept = .data$CUT),
+      colour = "#007c78",
+      linewidth = 1.1,
+      inherit.aes = FALSE
+    ) +
+    facet_wrap(~RANGE_NM, ncol = 1, scales = "free_y", labeller = label_both) +
+    scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+    coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+    labs(
+      title = paste(airport, "ARR candidate sector review, 2024"),
+      subtitle = paste(
+        "Red dash: all candidate cuts; grey dot: suggested merge interior; teal: merged-family edge; P50 threshold:",
+        "80 seconds"
+      ),
+      x = "Bearing from aerodrome reference point (degrees)",
+      y = "Smoothed movements per degree"
+    ) +
+    theme_minimal(base_size = 10) +
+    theme(panel.grid.minor = element_blank())
+}
+
+for (airport in study_airports) {
+  cat("\n### ", airport, " ARR Candidate Sector Review\n\n", sep = "")
+  print(plot_arrival_sector_review(airport))
+  if (airport == "EDDF") {
+    cat(
+      "\n**EDDF 40 NM shoulder at 125 degrees.** The 125-degree candidate lies between a ",
+      "strong peak near 110 degrees and a weaker shoulder near 138 degrees. The shoulder ",
+      "weakens markedly at broader smoothing, which is consistent with tactical spreading of ",
+      "arrival trajectories. However, its conditional weighted median differs by about 105 ",
+      "seconds, and pooling the two sides would change the P20 reference by more than 80 ",
+      "seconds for 6.2% of the valid movements, including high-support runway/class cells. ",
+      "The sectorisation therefore retains the 125-degree boundary: it preserves meaningful ",
+      "timing variation that may reflect runway alignment and direct crosswind/final ",
+      "shortcuts, rather than treating the visual shoulder as harmless noise.\n\n",
+      sep = ""
+    )
+  }
+}
 ```
 
 ```{r}
@@ -1024,7 +1208,9 @@ study_proposal_register |>
   transmute(
     Airport = .data$ICAO,
     `Range (NM)` = .data$RANGE_NM,
-    `Proposed sectors` = .data$PROPOSED_SECTORS,
+    `Initial sectors` = .data$INITIAL_SECTORS,
+    `Suggested merged sectors` = .data$MERGED_SECTORS,
+    `Merge cuts` = .data$MERGE_CUTS,
     `North overrun` = .data$NORTH_OVERRUN,
     `Boundaries for review` = .data$REVIEW_CUTS,
     Status = .data$PROPOSAL_STATUS
@@ -1036,18 +1222,23 @@ study_proposal_register |>
 #| label: full-study-arrival-boundary-decisions
 
 study_boundary_register |>
-  filter(!is.na(.data$REVIEW_REASON)) |>
+  filter(.data$MERGE_RECOMMENDED | !is.na(.data$REVIEW_REASON)) |>
   transmute(
     Airport = .data$ICAO,
     `Range (NM)` = .data$RANGE_NM,
     `Candidate cut` = .data$CUT,
+    `Boundary role` = .data$BOUNDARY_ROLE,
+    `Merge recommendation` = if_else(.data$MERGE_RECOMMENDED, "Merge", "Retain/review"),
     `Review reason` = .data$REVIEW_REASON,
     `Peak gap (deg)` = round(.data$PEAK_SEPARATION_DEG, 1),
     `Valley / lower peak` = scales::percent(.data$VALLEY_TO_LOWER_PEAK_RATIO, accuracy = 0.1),
     `Stable bandwidths` = .data$N_STABLE_BANDWIDTHS,
     `Shared cells` = .data$N_SHARED_CELLS,
     `Weighted |P20 diff| (min)` = round(.data$WEIGHTED_ABS_P20_DIFF, 2),
-    `Weighted |P50 diff| (min)` = round(.data$WEIGHTED_ABS_P50_DIFF, 2)
+    `Weighted |P50 diff| (min)` = round(.data$WEIGHTED_ABS_P50_DIFF, 2),
+    `Pooled weighted P20 shift (min)` = round(.data$POOL_WEIGHTED_P20_SHIFT, 2),
+    `Pooled P20 shift >80s` = scales::percent(.data$POOL_PCT_P20_SHIFT_OVER_80S, accuracy = 0.1),
+    `Max pooled P20 shift (min)` = round(.data$POOL_MAX_P20_SHIFT, 2)
   ) |>
   knitr::kable(format = "html")
 ```
