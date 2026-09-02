@@ -1,0 +1,68 @@
+ICAO,PHASE,RANGE_NM,SECTOR,SECTOR_LABEL,SECTOR_SEQ,BEARING_FROM,BEARING_TO,RANGE_NORTH_OVERRUN,SECTOR_CROSSES_NORTH,DECISION_STATUS,DECISION_NOTE
+EDDF,DEP,40,BRG065-155,DEP BRG065-155,1,65,155,TRUE,FALSE,APPROVED,Merge the shallow 115-degree cut; weighted pooled P20 shift is 3 seconds and 1.5 percent of movements exceed an 80-second shift.
+EDDF,DEP,40,BRG155-215,DEP BRG155-215,2,155,215,TRUE,FALSE,APPROVED,Retain the deep valley after the merged family.
+EDDF,DEP,40,BRG215-280,DEP BRG215-280,3,215,280,TRUE,FALSE,APPROVED,Retain; conditional P50 difference is 108 seconds and pooling affects 24.9 percent of movements by more than 80 seconds.
+EDDF,DEP,40,BRG280-335,DEP BRG280-335,4,280,335,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EDDF,DEP,40,BRG335-065,DEP BRG335-065,5,335,65,TRUE,TRUE,APPROVED,North-overrun sector.
+EDDF,DEP,100,BRG075-115,DEP BRG075-115,1,75,115,TRUE,FALSE,APPROVED,Retain to balance the North and east family.
+EDDF,DEP,100,BRG115-155,DEP BRG115-155,2,115,155,TRUE,FALSE,APPROVED,Retain the family edge.
+EDDF,DEP,100,BRG155-230,DEP BRG155-230,3,155,230,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EDDF,DEP,100,BRG230-275,DEP BRG230-275,4,230,275,TRUE,FALSE,APPROVED,Retain; conditional P50 difference is 124 seconds.
+EDDF,DEP,100,BRG275-325,DEP BRG275-325,5,275,325,TRUE,FALSE,APPROVED,Retain the outer edge of the North and east family.
+EDDF,DEP,100,BRG325-075,DEP BRG325-075,6,325,75,TRUE,TRUE,APPROVED,Merge candidate cuts at 000 and 035 degrees; cumulative weighted pooled P20 shift is 17 seconds within the affected family and 1.5 percent of its movements exceed an 80-second shift.
+EDDM,DEP,40,BRG005-050,DEP BRG005-050,1,5,50,TRUE,FALSE,APPROVED,Use the 005-degree seam for a human-readable North overrun boundary close to the observed valley.
+EDDM,DEP,40,BRG050-120,DEP BRG050-120,2,50,120,TRUE,FALSE,APPROVED,Merge the 085-degree cut; pooling impact is small within the connected family.
+EDDM,DEP,40,BRG120-205,DEP BRG120-205,3,120,205,TRUE,FALSE,APPROVED,Merge the 160-degree cut; the cumulative merged-family weighted P20 shift is 10 seconds with no movements above an 80-second shift.
+EDDM,DEP,40,BRG205-275,DEP BRG205-275,4,205,275,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EDDM,DEP,40,BRG275-300,DEP BRG275-300,5,275,300,TRUE,FALSE,APPROVED,Retain to avoid pooling sparse cells with larger reference-time shifts.
+EDDM,DEP,40,BRG300-005,DEP BRG300-005,6,300,5,TRUE,TRUE,APPROVED,North-overrun sector.
+EDDM,DEP,100,BRG005-075,DEP BRG005-075,1,5,75,TRUE,FALSE,APPROVED,Use the 005-degree seam and merge the 045-degree cut; pooling has a 4-second weighted P20 shift with no movements above 80 seconds.
+EDDM,DEP,100,BRG075-160,DEP BRG075-160,2,75,160,TRUE,FALSE,APPROVED,Merge the 120-degree twin-peak cut; pooling changes the weighted P20 reference by 14 seconds and only two sparse runway-class cells exceed 80 seconds.
+EDDM,DEP,100,BRG160-230,DEP BRG160-230,3,160,230,TRUE,FALSE,APPROVED,Retain the valley-safe 160-degree boundary nearest the observed valley floor.
+EDDM,DEP,100,BRG230-295,DEP BRG230-295,4,230,295,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EDDM,DEP,100,BRG295-005,DEP BRG295-005,5,295,5,TRUE,TRUE,APPROVED,North-overrun sector.
+EGKK,DEP,40,BRG020-065,DEP BRG020-065,1,20,65,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EGKK,DEP,40,BRG065-125,DEP BRG065-125,2,65,125,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EGKK,DEP,40,BRG125-210,DEP BRG125-210,3,125,210,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EGKK,DEP,40,BRG210-320,DEP BRG210-320,4,210,320,TRUE,FALSE,APPROVED,Merge the 275-degree cut; weighted pooled P20 shift is 4 seconds with no movements above an 80-second shift.
+EGKK,DEP,40,BRG320-020,DEP BRG320-020,5,320,20,TRUE,TRUE,APPROVED,North-overrun sector.
+EGKK,DEP,100,BRG000-070,DEP BRG000-070,1,0,70,FALSE,FALSE,PENDING_SEAM,Retain the selected boundary pending a human-readable representation of the non-overrunning North seam.
+EGKK,DEP,100,BRG070-130,DEP BRG070-130,2,70,130,FALSE,FALSE,PENDING_SEAM,Retain the clear candidate boundary.
+EGKK,DEP,100,BRG130-195,DEP BRG130-195,3,130,195,FALSE,FALSE,PENDING_SEAM,Merge the 165-degree cut; weighted pooled P20 shift is 9 seconds with no movements above an 80-second shift.
+EGKK,DEP,100,BRG195-280,DEP BRG195-280,4,195,280,FALSE,FALSE,PENDING_SEAM,Merge the 245-degree cut; weighted pooled P20 shift is 5 seconds with no movements above an 80-second shift.
+EGKK,DEP,100,BRG280-315,DEP BRG280-315,5,280,315,FALSE,FALSE,PENDING_SEAM,Retain the 280-degree cut; pooling it changes the 26L MT reference by 139 seconds across 171 flights.
+EGKK,DEP,100,BRG315-000,DEP BRG315-000,6,315,0,FALSE,FALSE,PENDING_SEAM,Retain the selected boundary pending a human-readable representation of the non-overrunning North seam.
+EHAM,DEP,40,BRG350-070,DEP BRG350-070,1,350,70,TRUE,TRUE,APPROVED,Use the 350-degree North seam at the observed valley floor.
+EHAM,DEP,40,BRG070-140,DEP BRG070-140,2,70,140,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EHAM,DEP,40,BRG140-175,DEP BRG140-175,3,140,175,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EHAM,DEP,40,BRG175-225,DEP BRG175-225,4,175,225,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EHAM,DEP,40,BRG225-280,DEP BRG225-280,5,225,280,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EHAM,DEP,40,BRG280-350,DEP BRG280-350,6,280,350,TRUE,FALSE,APPROVED,Retain the protected 280-degree boundary.
+EHAM,DEP,100,BRG350-070,DEP BRG350-070,1,350,70,TRUE,TRUE,APPROVED,Use the 350-degree North seam at the observed valley floor.
+EHAM,DEP,100,BRG070-145,DEP BRG070-145,2,70,145,TRUE,FALSE,APPROVED,Merge the shallow 110-degree cut; weighted pooled P20 shift is 7 seconds.
+EHAM,DEP,100,BRG145-180,DEP BRG145-180,3,145,180,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EHAM,DEP,100,BRG180-225,DEP BRG180-225,4,180,225,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EHAM,DEP,100,BRG225-275,DEP BRG225-275,5,225,275,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EHAM,DEP,100,BRG275-350,DEP BRG275-350,6,275,350,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+LEBL,DEP,40,BRG030-140,DEP BRG030-140,1,30,140,TRUE,FALSE,APPROVED,Use the 030-degree North seam and merge the shallow 095-degree cut; weighted pooled P20 shift is 17 seconds.
+LEBL,DEP,40,BRG140-190,DEP BRG140-190,2,140,190,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+LEBL,DEP,40,BRG190-260,DEP BRG190-260,3,190,260,TRUE,FALSE,APPROVED,Merge the shallow 230-degree cut and move the following rounded valley boundary from 265 to 260 degrees.
+LEBL,DEP,40,BRG260-300,DEP BRG260-300,4,260,300,TRUE,FALSE,APPROVED,Retain the 300-degree cut; its conditional weighted P50 difference is 86 seconds.
+LEBL,DEP,40,BRG300-030,DEP BRG300-030,5,300,30,TRUE,TRUE,APPROVED,North-overrun sector.
+LEBL,DEP,100,BRG030-140,DEP BRG030-140,1,30,140,TRUE,FALSE,APPROVED,Use the 030-degree North seam and merge the 090-degree cut; weighted pooled P20 shift is 19 seconds.
+LEBL,DEP,100,BRG140-205,DEP BRG140-205,2,140,205,TRUE,FALSE,APPROVED,Retain the protected 140-degree boundary.
+LEBL,DEP,100,BRG205-275,DEP BRG205-275,3,205,275,TRUE,FALSE,APPROVED,Merge the 240-degree cut; weighted pooled P20 shift is 26 seconds.
+LEBL,DEP,100,BRG275-315,DEP BRG275-315,4,275,315,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+LEBL,DEP,100,BRG315-030,DEP BRG315-030,5,315,30,TRUE,TRUE,APPROVED,North-overrun sector.
+EGLL,DEP,40,BRG025-080,DEP BRG025-080,1,25,80,TRUE,FALSE,APPROVED,Retain the clear candidate sector.
+EGLL,DEP,40,BRG080-140,DEP BRG080-140,2,80,140,TRUE,FALSE,APPROVED,Retain the clear candidate sector.
+EGLL,DEP,40,BRG140-205,DEP BRG140-205,3,140,205,TRUE,FALSE,APPROVED,Retain the clear candidate sector.
+EGLL,DEP,40,BRG205-255,DEP BRG205-255,4,205,255,TRUE,FALSE,APPROVED,Retain the clear candidate sector.
+EGLL,DEP,40,BRG255-310,DEP BRG255-310,5,255,310,TRUE,FALSE,APPROVED,Retain the clear candidate sector.
+EGLL,DEP,40,BRG310-025,DEP BRG310-025,6,310,25,TRUE,TRUE,APPROVED,North-overrun sector.
+EGLL,DEP,100,BRG025-080,DEP BRG025-080,1,25,80,TRUE,FALSE,APPROVED,Move the North seam from 000 to 025 and the 085 candidate cut to 080 for a balanced sector.
+EGLL,DEP,100,BRG080-125,DEP BRG080-125,2,80,125,TRUE,FALSE,APPROVED,Retain the valley-safe 125-degree boundary.
+EGLL,DEP,100,BRG125-195,DEP BRG125-195,3,125,195,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EGLL,DEP,100,BRG195-265,DEP BRG195-265,4,195,265,TRUE,FALSE,APPROVED,Merge the 235-degree cut; weighted pooled P20 shift is 6 seconds and no movements exceed an 80-second shift.
+EGLL,DEP,100,BRG265-310,DEP BRG265-310,5,265,310,TRUE,FALSE,APPROVED,Retain the clear candidate boundary.
+EGLL,DEP,100,BRG310-025,DEP BRG310-025,6,310,25,TRUE,TRUE,APPROVED,North-overrun sector.

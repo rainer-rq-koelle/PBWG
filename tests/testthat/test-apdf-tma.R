@@ -56,6 +56,22 @@ test_that("assign_tma_sector supports north-wrapping sector definitions", {
   assigned <- assign_tma_sector(tma_samples, sector_definitions)
 
   expect_equal(assigned$SECTOR, c("BRG330-030", "BRG030-150"))
+  expect_true(assigned$NORTH_OVERRUN[[1]])
+  expect_false(assigned$NORTH_OVERRUN[[2]])
+})
+
+test_that("approved sector definitions earmark North overrun", {
+  approved <- read_approved_tma_sector_definitions(phase = "ARR")
+  eddm_wrap <- dplyr::filter(
+    approved,
+    .data$AIRPORT == "EDDM",
+    .data$RANGE_NM == 100,
+    .data$BEARING_FROM == 340,
+    .data$BEARING_TO == 75
+  )
+
+  expect_true("NORTH_OVERRUN" %in% names(approved))
+  expect_true(eddm_wrap$NORTH_OVERRUN[[1]])
 })
 
 test_that("prepare_tma_sector_plot_input filters to one airport-phase-range", {

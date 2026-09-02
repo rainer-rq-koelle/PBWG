@@ -1394,14 +1394,14 @@ study_data_availability |>
   knitr::kable(format = "html")
 ```
 
-## Departure Sectorization (DSMA)
+## Departure Sectorization (DSMA): EDDF Development Example
 
-The same valley-based algorithm validated for arrivals (ASMA) applies to departures (DSMA). Departures cross the terminal airspace boundary outbound, with bearing measured at the 40 NM and 100 NM range rings. The additional time represents the transit from takeoff to the range crossing.
+The same valley-based algorithm validated for arrivals (ASMA) applies to departures (DSMA). Departures cross the terminal airspace boundary outbound, with bearing measured at the 40 NM and 100 NM range rings. The observed transit time runs from takeoff to the range crossing; additional time is only calculated once a reference has been joined.
 
 ### Methodology Consistency
 
 **Algorithm parameters (identical to ARR):**
-- Smoothing bandwidth: 12 degrees (circular Gaussian)
+- Smoothing bandwidth: 6 degrees (circular Gaussian)
 - Minimum relative prominence: 0.02 (2%)
 - Valley safety fraction: 0.25
 - Timing threshold: 80 seconds
@@ -1419,15 +1419,14 @@ Frankfurt shows clear departure flow structure at both ranges.
 #| label: eddf-dep-data-prep
 #| include: false
 
-# Prepare EDDF DEP data from three-airport validation
-# Using same data preparation as validated tests
+# Early EDDF development example. The full 13-airport review follows below.
 
 library(arrow)
 
 # Read EDDF 2024 APDF
 temp_file <- tempfile(fileext = ".parquet")
 unzip(
-  "../xx-test-gotcha/data/apdf-annual/apdf-2024.zip",
+  apdf_archive,
   files = "EDDF_01-JAN-2024_31-DEC-2024.gz.parquet",
   exdir = dirname(temp_file),
   junkpaths = TRUE
@@ -1448,7 +1447,7 @@ tma_eddf_dep <- apdf_eddf |>
   ) |>
   mutate(
     RANGE_NM = if_else(RANGE_TYPE == "C40_BEARING", 40, 100),
-    TMA_ADDL_TIME_MIN = if_else(
+    TMA_TRANSIT_TIME_MIN = if_else(
       RANGE_NM == 40, 
       C40_TRANSIT_TIME_MIN, 
       C100_TRANSIT_TIME_MIN
@@ -1463,10 +1462,10 @@ tma_eddf_dep <- apdf_eddf |>
     !is.na(BEARING),
     BEARING >= 0,
     BEARING < 360,
-    !is.na(TMA_ADDL_TIME_MIN),
-    TMA_ADDL_TIME_MIN > 0
+    !is.na(TMA_TRANSIT_TIME_MIN),
+    TMA_TRANSIT_TIME_MIN > 0
   ) |>
-  select(ICAO, PHASE, DATE, RANGE_NM, BEARING, TMA_ADDL_TIME_MIN, 
+  select(ICAO, PHASE, DATE, RANGE_NM, BEARING, TMA_TRANSIT_TIME_MIN,
          RWY, AC_CLASS, FLIGHT_ID)
 ```
 
@@ -1481,7 +1480,7 @@ eddf_dep_density_40 <- prepare_tma_bearing_density(
   airport = "EDDF",
   phase = "DEP",
   ranges = 40,
-  smoothing_bandwidth = 12
+  smoothing_bandwidth = 6
 )
 
 eddf_dep_extrema_40 <- identify_tma_bearing_extrema(
@@ -1499,7 +1498,7 @@ eddf_dep_proposal_40 <- propose_tma_sector_definitions(
 ggplot(eddf_dep_density_40, aes(x = BEARING_MID, y = SMOOTHED_N)) +
   geom_line(colour = "#2b6a8a", linewidth = 0.8) +
   geom_vline(
-    data = eddf_dep_proposal_40,
+    data = eddf_dep_proposal_40$sector_definitions,
     aes(xintercept = BEARING_FROM),
     colour = "#c8553d",
     linewidth = 0.8
@@ -1508,7 +1507,7 @@ ggplot(eddf_dep_density_40, aes(x = BEARING_MID, y = SMOOTHED_N)) +
   coord_cartesian(xlim = c(0, 360), expand = FALSE) +
   labs(
     title = "EDDF DEP 40 NM - Sector Proposals",
-    subtitle = sprintf("%d sectors proposed | Red lines: sector boundaries", nrow(eddf_dep_proposal_40)),
+    subtitle = sprintf("%d sectors proposed | Red lines: sector boundaries", nrow(eddf_dep_proposal_40$sector_definitions)),
     x = "Bearing from aerodrome reference point (degrees)",
     y = "Smoothed movements per degree"
   ) +
@@ -1516,7 +1515,7 @@ ggplot(eddf_dep_density_40, aes(x = BEARING_MID, y = SMOOTHED_N)) +
   theme(panel.grid.minor = element_blank())
 ```
 
-Frankfurt departures at 40 NM show `r nrow(eddf_dep_proposal_40)` distinct sectors with clear peaks corresponding to major SID routing.
+Frankfurt departures at 40 NM show `r nrow(eddf_dep_proposal_40$sector_definitions)` distinct sectors with clear peaks corresponding to major SID routing.
 
 ```{r}
 #| label: eddf-dep-density-100nm
@@ -1529,7 +1528,7 @@ eddf_dep_density_100 <- prepare_tma_bearing_density(
   airport = "EDDF",
   phase = "DEP",
   ranges = 100,
-  smoothing_bandwidth = 12
+  smoothing_bandwidth = 6
 )
 
 eddf_dep_extrema_100 <- identify_tma_bearing_extrema(
@@ -1547,7 +1546,7 @@ eddf_dep_proposal_100 <- propose_tma_sector_definitions(
 ggplot(eddf_dep_density_100, aes(x = BEARING_MID, y = SMOOTHED_N)) +
   geom_line(colour = "#2b6a8a", linewidth = 0.8) +
   geom_vline(
-    data = eddf_dep_proposal_100,
+    data = eddf_dep_proposal_100$sector_definitions,
     aes(xintercept = BEARING_FROM),
     colour = "#c8553d",
     linewidth = 0.8
@@ -1556,7 +1555,7 @@ ggplot(eddf_dep_density_100, aes(x = BEARING_MID, y = SMOOTHED_N)) +
   coord_cartesian(xlim = c(0, 360), expand = FALSE) +
   labs(
     title = "EDDF DEP 100 NM - Sector Proposals",
-    subtitle = sprintf("%d sectors proposed | Red lines: sector boundaries", nrow(eddf_dep_proposal_100)),
+    subtitle = sprintf("%d sectors proposed | Red lines: sector boundaries", nrow(eddf_dep_proposal_100$sector_definitions)),
     x = "Bearing from aerodrome reference point (degrees)",
     y = "Smoothed movements per degree"
   ) +
@@ -1564,11 +1563,320 @@ ggplot(eddf_dep_density_100, aes(x = BEARING_MID, y = SMOOTHED_N)) +
   theme(panel.grid.minor = element_blank())
 ```
 
-At 100 NM, Frankfurt shows `r nrow(eddf_dep_proposal_100)` sectors, indicating consistent flow structure as departures climb and accelerate toward cruise.
+At 100 NM, Frankfurt shows `r nrow(eddf_dep_proposal_100$sector_definitions)` sectors, indicating consistent flow structure as departures climb and accelerate toward cruise.
 
-**EDDF DEP Decision:** Both ranges show clear sector structure. Peaks align with known departure routes. All sectors fall within operational target range (4-7 sectors).
+**EDDF DEP development finding:** Both ranges show clear sector structure. The
+full review below applies the same evidence screen before any proposed cut is
+accepted or pooled.
 
 ---
 
-**Session Notes:** DSMA algorithm validation complete for EDDF, EDDM, EGLL. Remaining airports (EGKK, EHAM, LEBL, LEMD, LFPG, LGAV, LIRF, LSZH, LTFM) to be processed sequentially and added to this document as approved.
+**Session Notes:** DSMA algorithm validation is complete for EDDF, EDDM, EGKK,
+EGLL, EHAM, and LEBL. Remaining airports (LEMD, LFPG, LGAV, LIRF, LSZH, LTFM)
+will be processed sequentially and added to this document when approved.
 
+## Departure Sectorization (DSMA)
+
+The DSMA review applies the same circular, valley-based workflow to `DEP`
+movements in the 2024 APDF reference set. Bearing is observed at the outbound
+40 NM and 100 NM crossings. The resulting sector definitions will later be
+used with runway and aircraft-class samples to build the DSMA reference times;
+the figures below deliberately assess traffic geometry first.
+
+### Review Settings
+
+- Central circular Gaussian smoothing bandwidth: 6 degrees.
+- Sensitivity check: 4, 6, and 8 degree bandwidths.
+- Substantial peak/minimum screen: 2 percent relative prominence.
+- Candidate cuts: valley-safe rounded to 5 degrees.
+- Merge review: valley/lower-peak ratio at least 0.25 and conditional weighted
+  P50 difference no more than 80 seconds.
+
+### Evidence Guidance
+
+The first-round proposal now adds a conservative three-tier evidence guide. A
+cut is marked **Propose merge** only when it is a shallow valley and both the
+conditional weighted P50 difference (at most 80 seconds) and the pooling
+impact (weighted P20 shift at most 30 seconds; at most 1 percent of movements
+above 80 seconds) are small. A **Propose retain** flag identifies a deep valley
+or material timing/pooling effect. All mixed cases remain **Analyst review**:
+the guide reduces routine decisions, but does not replace operational knowledge.
+North overrun is determined independently for each airport and range.
+
+```{r}
+#| label: full-study-departure-input
+#| include: false
+
+dsma_review_path <- "dsma-sector-review-2024.rds"
+if (!file.exists(dsma_review_path)) {
+  stop(
+    "DSMA review artefact is missing. Run scripts/build-dsma-sector-review.R before rendering this note."
+  )
+}
+
+dsma_review <- readRDS(dsma_review_path)
+dsma_airports <- dsma_review$metadata$study_airports
+dsma_density <- dsma_review$density
+dsma_boundary_register <- dsma_review$boundary_register
+dsma_proposal_register <- dsma_review$proposal_register
+dsma_sector_support <- dsma_review$sector_support
+dsma_decisions <- readr::read_csv(
+  "dsma-sector-decisions-2024.csv",
+  show_col_types = FALSE
+)
+dsma_approved_cuts <- dsma_decisions |>
+  distinct(.data$ICAO, .data$PHASE, .data$RANGE_NM, CUT = .data$BEARING_FROM)
+```
+
+### Candidate Sector Figures
+
+Each airport is shown in a single two-panel figure, with 100 NM above 40 NM.
+Red dashed lines are all first-round candidate cuts. Grey dotted lines are the
+interiors of adjacent peak families suggested for a merge review. Teal solid
+lines are analyst-selected or approved boundaries. Red dotted lines are
+superseded candidate cuts, retained at a readable weight so the decision path
+remains inspectable. The figures support review; they do not approve a
+definition by themselves.
+
+```{r}
+#| label: full-study-departure-density-proposals
+#| fig-width: 11
+#| fig-height: 7
+#| echo: false
+#| results: asis
+
+plot_departure_sector_review <- function(airport) {
+  airport_density <- dsma_density |>
+    filter(.data$ICAO == airport) |>
+    mutate(RANGE_NM = factor(.data$RANGE_NM, levels = c(100, 40)))
+  airport_cuts <- dsma_boundary_register |>
+    filter(.data$ICAO == airport) |>
+    mutate(RANGE_NM = factor(.data$RANGE_NM, levels = c(100, 40)))
+  airport_approved_cuts <- dsma_approved_cuts |>
+    filter(.data$ICAO == airport) |>
+    mutate(RANGE_NM = factor(.data$RANGE_NM, levels = c(100, 40)))
+  retired_cuts <- airport_cuts |>
+    anti_join(
+      airport_approved_cuts,
+      by = c("ICAO", "RANGE_NM", "CUT")
+    )
+
+  ggplot(airport_density, aes(x = .data$BEARING_MID, y = .data$SMOOTHED_N)) +
+    geom_line(colour = "#2b6a8a", linewidth = 0.8) +
+    geom_vline(
+      data = filter(airport_cuts, nrow(airport_approved_cuts) == 0),
+      aes(xintercept = .data$CUT),
+      colour = "#c8553d",
+      linewidth = 0.5,
+      linetype = "dashed",
+      inherit.aes = FALSE
+    ) +
+    geom_vline(
+      data = retired_cuts,
+      aes(xintercept = .data$CUT),
+      colour = "#c8553d",
+      linewidth = 0.75,
+      linetype = "dotted",
+      inherit.aes = FALSE
+    ) +
+    geom_vline(
+      data = airport_approved_cuts,
+      aes(xintercept = .data$CUT),
+      colour = "#007c78",
+      linewidth = 1.2,
+      inherit.aes = FALSE
+    ) +
+    facet_wrap(~RANGE_NM, ncol = 1, scales = "free_y", labeller = label_both) +
+    scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+    coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+    labs(
+      title = paste(airport, "DEP candidate sector review, 2024"),
+      subtitle = paste(
+        "Teal: approved boundaries; red dot: superseded candidate cuts; red dash: candidate cuts pending approval"
+      ),
+      x = "Bearing from aerodrome reference point (degrees)",
+      y = "Smoothed movements per degree"
+    ) +
+    theme_minimal(base_size = 10) +
+    theme(panel.grid.minor = element_blank())
+}
+
+for (airport in dsma_airports) {
+  cat("\n### ", airport, " DEP Candidate Sector Review\n\n", sep = "")
+  print(plot_departure_sector_review(airport))
+
+  if (airport == "EDDF") {
+    cat(
+      "\n**EDDF approved DEP decision.** At 40 NM, the shallow 115-degree cut is merged, ",
+      "forming 065-155; its weighted pooled P20 shift is 3 seconds and 1.5% of movements ",
+      "exceed an 80-second shift. At 100 NM, cumulative review of the connected North/east ",
+      "family merges 000 and 035 only, forming 325-075. Within the affected family, this ",
+      "six-sector definition has a 17-second weighted pooled P20 shift and 1.5% of movements ",
+      "above 80 seconds.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "EDDM") {
+    cat(
+      "\n**EDDM approved DEP decision.** At 40 NM, use a human-readable 005 North seam ",
+      "and merge cuts at 085 and 160. The connected merged family has a 10-second weighted ",
+      "pooled P20 shift and no movements above the 80-second screen. At 100 NM, the 005 North ",
+      "seam and 045 merge form 005-075. Pooling the 120 twin-peak cut forms 075-160 and changes ",
+      "the weighted P20 reference by 14 seconds across 37,487 movements. Only two sparse ",
+      "runway/class cells (two flights each) exceed the 80-second screen; 160 is retained as ",
+      "the rounded boundary closest to the valley floor.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "EGKK") {
+    cat(
+      "\n**EGKK DEP decision.** At 40 NM, pooling the 275-degree cut forms 210-320 ",
+      "with a 4-second weighted P20 shift, no movements above the 80-second screen, and ",
+      "a 77-second maximum shared-cell shift. At 100 NM, merge 165 and 245, forming ",
+      "130-195 and 195-280. Retain 280: pooling it would change the 26L / MT reference ",
+      "by 139 seconds across 171 flights. The selected 100 NM sectorisation remains pending ",
+      "a human-readable representation of its non-overrunning North seam.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "EHAM") {
+    cat(
+      "\n**EHAM approved DEP decision.** Both ranges use a 350 North seam at the observed ",
+      "valley floor, creating a 350-070 North-overrun sector. At 40 NM, all six flow ",
+      "separations are retained; in particular, pooling the 280 cut moves 2.64% of the ",
+      "affected movements beyond 80 seconds. At 100 NM, merge the shallow 110 cut to form ",
+      "070-145, with a 7-second weighted pooled P20 shift.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "LEBL") {
+    cat(
+      "\n**LEBL approved DEP decision.** Both ranges use a 030 North seam. At 40 NM, ",
+      "merge 095 and 230, move the following rounded valley boundary from 265 to 260, and ",
+      "retain 300 because its conditional weighted P50 difference is 86 seconds. At 100 NM, ",
+      "merge 090 and 240 (19- and 26-second weighted pooled P20 shifts), while retaining ",
+      "the protected 140-degree boundary.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "EGLL") {
+    cat(
+      "\n**EGLL approved DEP decision.** At 40 NM, all six structured departure sectors are ",
+      "retained. At 100 NM, the North seam moves to 025 and the first cut to 080; the ",
+      "valley-safe 125-degree boundary is retained. Pooling the 195-235 and 235-265 wiggles ",
+      "forms 195-265 with a 6-second weighted P20 shift, no movements above 80 seconds, and ",
+      "a 48-second maximum shared-cell shift.\n\n",
+      sep = ""
+    )
+  }
+}
+```
+
+### Proposal Register
+
+The initial sector labels and North-overrun flag are retained as part of the
+sector definition record. A proposed merge reduces the number of sectors only
+for review: it must be explicitly confirmed before it becomes a reference-time
+definition.
+
+```{r}
+#| label: full-study-departure-proposal-register
+
+dsma_proposal_register |>
+  transmute(
+    Airport = .data$ICAO,
+    `Range (NM)` = .data$RANGE_NM,
+    `Initial sectors` = .data$INITIAL_SECTORS,
+    `Suggested merged sectors` = .data$MERGED_SECTORS,
+    `Merge cuts` = .data$MERGE_CUTS,
+    `North overrun` = .data$NORTH_OVERRUN,
+    `Boundaries for review` = .data$REVIEW_CUTS,
+    Status = .data$PROPOSAL_STATUS
+  ) |>
+  knitr::kable(format = "html")
+```
+
+### Merge Evidence And Boundary Flags
+
+The table contains every candidate that either requires visual scrutiny or
+meets the provisional merge screen. `Weighted |P50 diff|` compares matching
+runway/class cells across the cut. The pooled P20 measures show the direct
+reference-time consequence if both sides were treated as one sector.
+
+```{r}
+#| label: full-study-departure-boundary-decisions
+
+dsma_boundary_register |>
+  filter(.data$MERGE_RECOMMENDED | !is.na(.data$REVIEW_REASON)) |>
+  transmute(
+    Airport = .data$ICAO,
+    `Range (NM)` = .data$RANGE_NM,
+    `Candidate cut` = .data$CUT,
+    `Boundary role` = .data$BOUNDARY_ROLE,
+    `Evidence guidance` = .data$EVIDENCE_DECISION,
+    `Merge recommendation` = if_else(.data$MERGE_RECOMMENDED, "Merge", "Retain/review"),
+    `Review reason` = .data$REVIEW_REASON,
+    `Peak gap (deg)` = round(.data$PEAK_SEPARATION_DEG, 1),
+    `Valley / lower peak` = scales::percent(.data$VALLEY_TO_LOWER_PEAK_RATIO, accuracy = 0.1),
+    `Stable bandwidths` = .data$N_STABLE_BANDWIDTHS,
+    `Shared cells` = .data$N_SHARED_CELLS,
+    `Weighted |P20 diff| (min)` = round(.data$WEIGHTED_ABS_P20_DIFF, 2),
+    `Weighted |P50 diff| (min)` = round(.data$WEIGHTED_ABS_P50_DIFF, 2),
+    `Pooled weighted P20 shift (min)` = round(.data$POOL_WEIGHTED_P20_SHIFT, 2),
+    `Pooled P20 shift >80s` = scales::percent(.data$POOL_PCT_P20_SHIFT_OVER_80S, accuracy = 0.1),
+    `Max pooled P20 shift (min)` = round(.data$POOL_MAX_P20_SHIFT, 2)
+  ) |>
+  knitr::kable(format = "html")
+```
+
+### Movement And Reference-Cell Support
+
+This table retains the volume and runway/class support behind each initial
+candidate sector. No minimum sample-size rule is applied at this stage; sparse
+cells remain visible for later reference-time governance.
+
+```{r}
+#| label: full-study-departure-sector-support
+
+dsma_sector_support |>
+  transmute(
+    Airport = .data$ICAO,
+    `Range (NM)` = .data$RANGE_NM,
+    `Sector ID` = .data$SECTOR_ID,
+    Crossings = .data$N_CROSSINGS,
+    `Range share` = scales::percent(.data$PCT_RANGE_CROSSINGS, accuracy = 0.1),
+    `Valid TMA` = .data$N_VALID_TMA,
+    `Reference cells` = .data$N_REFERENCE_CELLS,
+    `Minimum cell n` = .data$MIN_CELL_N,
+    `Median cell n` = round(.data$MEDIAN_CELL_N)
+  ) |>
+  knitr::kable(format = "html")
+```
+
+### Confirmed DEP Decisions
+
+Approved definitions are recorded separately from the first-round candidate
+artefact. `RANGE_NORTH_OVERRUN` states the range-level decision;
+`SECTOR_CROSSES_NORTH` identifies the actual sector spanning 360/000 degrees.
+
+```{r}
+#| label: confirmed-departure-decisions
+
+dsma_decisions |>
+  filter(.data$DECISION_STATUS == "APPROVED") |>
+  transmute(
+    Airport = .data$ICAO,
+    `Range (NM)` = .data$RANGE_NM,
+    Sector = .data$SECTOR,
+    `Range North overrun` = .data$RANGE_NORTH_OVERRUN,
+    `Sector crosses North` = .data$SECTOR_CROSSES_NORTH,
+    Status = .data$DECISION_STATUS,
+    Note = .data$DECISION_NOTE
+  ) |>
+  knitr::kable(format = "html")
+```

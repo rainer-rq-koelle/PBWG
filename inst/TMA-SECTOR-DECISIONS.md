@@ -11,6 +11,165 @@
 
 ---
 
+## 2024 Reference Period - DEP Sectorization
+
+### EDDF - Frankfurt ✅ APPROVED
+
+#### DEP 40NM - 5 sectors
+
+**Approved boundaries**: `065`, `155`, `215`, `280`, `335`
+
+**Decision**: Merge the shallow `115` degree cut, forming `065-155`. Its
+conditional weighted P50 difference is 28 seconds; pooling changes the P20
+reference by 3 seconds on average and affects 1.5% of movements by more than
+80 seconds. Retain `215`: its P50 difference is 108 seconds and pooling would
+affect 24.9% of movements by more than 80 seconds.
+
+**North treatment**: The range has a North overrun; `335-065` is the sector
+crossing North.
+
+#### DEP 100NM - 6 sectors
+
+**Approved boundaries**: `075`, `115`, `155`, `230`, `275`, `325`
+
+**Decision**: Merge the candidate cuts at `000` and `035`, forming the
+North-overrun sector `325-075`. The cumulative weighted pooled P20 shift is
+17 seconds within the affected family and 1.5% of its movements exceed an
+80-second shift. Retain `075` and
+`325` to preserve balanced sectors. Do not merge the full connected family:
+including `075` and `325` would reduce the definition to four sectors and
+increase the share of movements above the 80-second shift to 5.0%.
+
+**Decision rule retained**: Screen individual merge candidates using the
+valley and 80-second evidence, then re-evaluate each connected merge family
+cumulatively. Select the most balanced definition that preserves materially
+different reference-time behaviour.
+
+### EDDM - Munich ✅ APPROVED
+
+#### DEP 40NM - 6 sectors
+
+**Approved boundaries**: `005`, `050`, `120`, `205`, `275`, `300`
+
+**Decision**: Use `005` as the human-readable North seam, close to the
+observed valley. Merge the `085` and `160` cuts, forming `050-120` and
+`120-205`. Within the connected merge family, the weighted pooled P20 shift
+is 10 seconds and no movements exceed the 80-second check. Retain `275` and
+`300`, as their further pooling introduces larger sparse-cell shifts.
+
+**North treatment**: The range has a North overrun; `300-005` is the sector
+crossing North.
+
+#### DEP 100NM - 5 sectors
+
+**Approved boundaries**: `005`, `075`, `160`, `230`, `295`
+
+**Decision**: Use the `005` North seam and merge the `045` cut. Merge the
+`120` twin-peak cut, forming `075-160`: it changes the weighted P20 reference
+by 14 seconds across 37,487 movements. Only two sparse runway/class cells
+(two flights each) exceed the 80-second screen. Retain `160`, the rounded
+boundary closest to the observed valley floor at approximately 156-158
+degrees, together with the clear `230` and `295` boundaries.
+
+**North treatment**: The range has a North overrun; `295-005` is the sector
+crossing North.
+
+### EGKK - London Gatwick ✅ 40NM APPROVED / 100NM SEAM PENDING
+
+#### DEP 40NM - 5 sectors
+
+**Approved boundaries**: `020`, `065`, `125`, `210`, `320`
+
+**Decision**: Merge the `275` degree cut, forming `210-320`. Pooling 39,328
+departures changes the weighted P20 by 4 seconds; no movement exceeds the
+80-second check and the maximum shared-cell shift is 77 seconds.
+
+**North treatment**: The range has a North overrun; `320-020` is the sector
+crossing North.
+
+#### DEP 100NM - 6 selected sectors; North seam pending
+
+**Selected boundaries**: `000`, `070`, `130`, `195`, `280`, `315`
+
+**Decision**: Merge `165`, forming `130-195` (9-second weighted pooled P20
+shift; no movement above 80 seconds), and merge `245`, forming `195-280`
+(5-second shift; no movement above 80 seconds). Retain `280`: pooling
+`245-280` with `280-315` changes the `26L / MT` reference by 139 seconds
+across 171 flights. The analyst-facing representation of the non-overrunning
+North seam remains to be selected before the definition is finalised.
+
+### EHAM - Amsterdam Schiphol ✅ APPROVED
+
+#### DEP 40NM - 6 sectors
+
+**Approved boundaries**: `350`, `070`, `140`, `175`, `225`, `280`
+
+**Decision**: Retain all proposed flow separations. The `280` cut is protected
+by a 2.64% share of affected movements whose pooled P20 change exceeds 80
+seconds.
+
+**North treatment**: The range has a North overrun; `350-070` is the sector
+crossing North. The `350` seam is the observed valley floor.
+
+#### DEP 100NM - 6 sectors
+
+**Approved boundaries**: `350`, `070`, `145`, `180`, `225`, `275`
+
+**Decision**: Merge the shallow `110` degree cut, forming `070-145`. The
+weighted pooled P20 shift is 7 seconds and only 0.02% of the movements exceed
+the 80-second screen. Retain all remaining flow separations.
+
+**North treatment**: The range has a North overrun; `350-070` is the sector
+crossing North. The `350` seam is the observed valley floor.
+
+### LEBL - Barcelona ✅ APPROVED
+
+#### DEP 40NM - 5 sectors
+
+**Approved boundaries**: `030`, `140`, `190`, `260`, `300`
+
+**Decision**: Use the `030` North seam. Merge the shallow `095` and `230`
+cuts, with weighted pooled P20 shifts of 17 and 16 seconds respectively.
+Move the next rounded boundary from `265` to `260`, which remains within the
+observed low-density valley. Retain `300`: its conditional weighted P50
+difference is 86 seconds, beyond the 80-second protection rule.
+
+**North treatment**: The range has a North overrun; `300-030` is the sector
+crossing North.
+
+#### DEP 100NM - 5 sectors
+
+**Approved boundaries**: `030`, `140`, `205`, `275`, `315`
+
+**Decision**: Use the `030` North seam. Merge `090` (19-second weighted
+pooled P20 shift) and `240` (26-second shift). Retain `140`, whose conditional
+weighted P50 difference is 125 seconds, and retain the remaining clear cuts.
+
+**North treatment**: The range has a North overrun; `315-030` is the sector
+crossing North.
+
+### EGLL - London Heathrow ✅ APPROVED
+
+#### DEP 40NM - 6 sectors
+
+**Approved boundaries**: `025`, `080`, `140`, `205`, `255`, `310`
+
+**Decision**: Retain all six visually clear sectors. The range has a tight
+structured departure pattern; every candidate cut is in a near-zero valley.
+The `310-025` sector crosses North.
+
+#### DEP 100NM - 6 sectors
+
+**Approved boundaries**: `025`, `080`, `125`, `195`, `265`, `310`
+
+**Decision**: Move the North seam to `025` and use `080` instead of `085` for
+a balanced first sector. Retain the valley-safe `125` cut. Merge the small
+`235` degree wiggle, forming `195-265`: pooling 20,019 movements shifts the
+weighted P20 by 6 seconds, with no movement above the 80-second threshold and
+a maximum shared-cell shift of 48 seconds. The `310-025` sector crosses North.
+
+---
+
 ## EDDF - Frankfurt ✅ AGREED
 
 ### ARR 40NM - 6 sectors

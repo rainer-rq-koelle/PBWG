@@ -7,11 +7,16 @@ library(arrow)
 devtools::load_all(quiet = TRUE)
 
 cat("Testing DSMA pipeline for EDDF only\n\n")
+apdf_archive <- Sys.getenv(
+  "PBWG_APDF_2024",
+  unset = "/Users/rainerkoelle/RProjects/__DATA/APDF/apdf-2024.zip"
+)
+smoothing_bandwidth <- 6
 
 # Read EDDF data
 temp <- tempfile(fileext = ".parquet")
 unzip(
-  "../xx-test-gotcha/data/apdf-annual/apdf-2024.zip",
+  apdf_archive,
   files = "EDDF_01-JAN-2024_31-DEC-2024.gz.parquet",
   exdir = dirname(temp),
   junkpaths = TRUE
@@ -33,7 +38,7 @@ tma_dep <- apdf_eddf %>%
   ) %>%
   mutate(
     RANGE_NM = if_else(RANGE_TYPE == "C40_BEARING", 40, 100),
-    TMA_ADDL_TIME_MIN = if_else(RANGE_NM == 40, C40_TRANSIT_TIME_MIN, C100_TRANSIT_TIME_MIN),
+    TMA_TRANSIT_TIME_MIN = if_else(RANGE_NM == 40, C40_TRANSIT_TIME_MIN, C100_TRANSIT_TIME_MIN),
     PHASE = SRC_PHASE,
     DATE = as.Date(MVT_TIME_UTC),
     RWY = AP_C_RWY,
@@ -44,10 +49,10 @@ tma_dep <- apdf_eddf %>%
     !is.na(BEARING),
     BEARING >= 0,
     BEARING < 360,
-    !is.na(TMA_ADDL_TIME_MIN),
-    TMA_ADDL_TIME_MIN > 0
+    !is.na(TMA_TRANSIT_TIME_MIN),
+    TMA_TRANSIT_TIME_MIN > 0
   ) %>%
-  select(ICAO, PHASE, DATE, RANGE_NM, BEARING, TMA_ADDL_TIME_MIN, RWY, AC_CLASS, FLIGHT_ID)
+  select(ICAO, PHASE, DATE, RANGE_NM, BEARING, TMA_TRANSIT_TIME_MIN, RWY, AC_CLASS, FLIGHT_ID)
 
 cat("TMA samples:", nrow(tma_dep), "\n")
 cat("Sample by range:\n")
@@ -61,7 +66,7 @@ density_40 <- prepare_tma_bearing_density(
   airport = "EDDF",
   phase = "DEP",
   ranges = 40,
-  smoothing_bandwidth = 12
+  smoothing_bandwidth = smoothing_bandwidth
 )
 
 cat("Density output:\n")

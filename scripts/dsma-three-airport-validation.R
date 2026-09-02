@@ -10,6 +10,11 @@ library(tidyr)
 devtools::load_all(quiet = TRUE)
 
 test_airports <- c("EDDF", "EDDM", "EGLL")
+smoothing_bandwidth <- 6
+apdf_archive <- Sys.getenv(
+  "PBWG_APDF_2024",
+  unset = "/Users/rainerkoelle/RProjects/__DATA/APDF/apdf-2024.zip"
+)
 
 cat("╔════════════════════════════════════════════════════════════════════╗\n")
 cat("║         DSMA THREE-AIRPORT VALIDATION TEST                         ║\n")
@@ -24,7 +29,7 @@ for (apt in test_airports) {
 
   temp <- tempfile(fileext = ".parquet")
   unzip(
-    "../xx-test-gotcha/data/apdf-annual/apdf-2024.zip",
+    apdf_archive,
     files = filename,
     exdir = dirname(temp),
     junkpaths = TRUE
@@ -52,7 +57,7 @@ tma_dep <- apdf_all %>%
   ) %>%
   mutate(
     RANGE_NM = if_else(RANGE_TYPE == "C40_BEARING", 40, 100),
-    TMA_ADDL_TIME_MIN = if_else(RANGE_NM == 40, C40_TRANSIT_TIME_MIN, C100_TRANSIT_TIME_MIN),
+    TMA_TRANSIT_TIME_MIN = if_else(RANGE_NM == 40, C40_TRANSIT_TIME_MIN, C100_TRANSIT_TIME_MIN),
     PHASE = SRC_PHASE,
     DATE = as.Date(MVT_TIME_UTC),
     RWY = AP_C_RWY,
@@ -62,10 +67,10 @@ tma_dep <- apdf_all %>%
     !is.na(BEARING),
     BEARING >= 0,
     BEARING < 360,
-    !is.na(TMA_ADDL_TIME_MIN),
-    TMA_ADDL_TIME_MIN > 0
+    !is.na(TMA_TRANSIT_TIME_MIN),
+    TMA_TRANSIT_TIME_MIN > 0
   ) %>%
-  select(ICAO, PHASE, DATE, RANGE_NM, BEARING, TMA_ADDL_TIME_MIN, RWY, AC_CLASS, FLIGHT_ID)
+  select(ICAO, PHASE, DATE, RANGE_NM, BEARING, TMA_TRANSIT_TIME_MIN, RWY, AC_CLASS, FLIGHT_ID)
 
 cat("✓ Prepared", nrow(tma_dep), "DEP movements\n\n")
 
@@ -99,7 +104,7 @@ for (apt in test_airports) {
       airport = apt,
       phase = "DEP",
       ranges = range,
-      smoothing_bandwidth = 12
+      smoothing_bandwidth = smoothing_bandwidth
     )
 
     # Detect extrema
@@ -122,7 +127,7 @@ for (apt in test_airports) {
         valley_safety_fraction = 0.25
       )
 
-      n_sectors <- nrow(proposal)
+      n_sectors <- nrow(proposal$sector_definitions)
       cat(" →", n_sectors, "sectors\n")
 
       results[[paste(apt, range)]] <- list(
@@ -183,9 +188,9 @@ cat("═════════════════════════
 
 if (nrow(failures) == 0) {
   cat("✅ DSMA approach validated for multiple airports\n")
-  cat("✅ Ready to scale to all 12 airports\n")
+  cat("✅ Ready to scale to the full 13-airport review\n")
   cat("✅ Same parameters as ASMA work for DSMA\n\n")
-  cat("Next step: Run full batch for all 12 airports\n")
+  cat("Next step: Use the full review artefact and Technical Note to assess the 13-airport candidate cuts\n")
 } else {
   cat("⚠ Issues found - investigate failures before scaling\n")
 }

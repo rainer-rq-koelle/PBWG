@@ -715,7 +715,8 @@ assign_tma_sector <- function(
     dplyr::select(
       matched,
       ".ROW_ID", "SECTOR", "SECTOR_ID", "SECTOR_LABEL", "SECTOR_SEQ",
-      "BEARING_FROM", "BEARING_TO", "START_ROTATION", "CUT_FROM", "CUT_TO"
+      "BEARING_FROM", "BEARING_TO", "NORTH_OVERRUN",
+      "START_ROTATION", "CUT_FROM", "CUT_TO"
     ),
     by = ".ROW_ID"
   )

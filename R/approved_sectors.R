@@ -12,7 +12,7 @@
 #'   for both ranges (default NULL).
 #'
 #' @return A tibble with columns: AIRPORT, PHASE, RANGE_NM, SECTOR, SECTOR_LABEL,
-#'   SECTOR_SEQ, BEARING_FROM, BEARING_TO
+#'   SECTOR_SEQ, BEARING_FROM, BEARING_TO, and NORTH_OVERRUN.
 #'
 #' @details
 #' The approved sector definitions are stored in `inst/extdata/` and loaded from
@@ -29,6 +29,7 @@
 #'   \item SECTOR_SEQ: Sector sequence number (1, 2, 3, ...)
 #'   \item BEARING_FROM: Starting bearing in degrees (0-359)
 #'   \item BEARING_TO: Ending bearing in degrees (0-359)
+#'   \item NORTH_OVERRUN: Whether the sector spans across 360/000 degrees
 #' }
 #'
 #' @examples
@@ -108,5 +109,9 @@ read_approved_tma_sector_definitions <- function(
     sectors <- dplyr::filter(sectors, .data$RANGE_NM == range_nm)
   }
 
-  tibble::as_tibble(sectors)
+  tibble::as_tibble(sectors) |>
+    dplyr::mutate(
+      NORTH_OVERRUN = .data$BEARING_FROM > .data$BEARING_TO &
+        .data$BEARING_TO != 0
+    )
 }

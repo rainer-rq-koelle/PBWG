@@ -22,7 +22,7 @@ for both ranges (default NULL).}
 }
 \value{
 A tibble with columns: AIRPORT, PHASE, RANGE_NM, SECTOR, SECTOR_LABEL,
-SECTOR_SEQ, BEARING_FROM, BEARING_TO
+SECTOR_SEQ, BEARING_FROM, BEARING_TO, and NORTH_OVERRUN.
 }
 \description{
 Loads the approved terminal airspace sector definitions from the package data.
@@ -44,6 +44,7 @@ Sector definitions include:
 \item SECTOR_SEQ: Sector sequence number (1, 2, 3, ...)
 \item BEARING_FROM: Starting bearing in degrees (0-359)
 \item BEARING_TO: Ending bearing in degrees (0-359)
+\item NORTH_OVERRUN: Whether the sector spans across 360/000 degrees
 }
 }
 \examples{
