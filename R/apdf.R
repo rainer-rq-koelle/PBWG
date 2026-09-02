@@ -405,6 +405,28 @@ combine_pbwg_airport_traffic_years <- function(
   )
 }
 
+#' Build Reference Period Label
+#'
+#' Creates a standardised label for reference periods from start and end dates.
+#' Returns a single year as a character string when start and end are in the same
+#' year, otherwise returns a hyphen-separated range.
+#'
+#' @param ref_start POSIXct reference period start time.
+#' @param ref_end POSIXct reference period end time.
+#'
+#' @return A character string, e.g., `"2024"` or `"2023-2025"`.
+#' @export
+build_reference_period_label <- function(ref_start, ref_end) {
+  start_year <- lubridate::year(ref_start)
+  end_year <- lubridate::year(ref_end)
+
+  if (start_year == end_year) {
+    return(as.character(start_year))
+  }
+
+  stringr::str_c(start_year, end_year, sep = "-")
+}
+
 stop_if_apdf_columns_missing <- function(data, required_columns) {
   missing_columns <- base::setdiff(required_columns, names(data))
 
