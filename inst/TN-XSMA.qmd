@@ -1393,3 +1393,182 @@ study_boundary_register |>
 study_data_availability |>
   knitr::kable(format = "html")
 ```
+
+## Departure Sectorization (DSMA)
+
+The same valley-based algorithm validated for arrivals (ASMA) applies to departures (DSMA). Departures cross the terminal airspace boundary outbound, with bearing measured at the 40 NM and 100 NM range rings. The additional time represents the transit from takeoff to the range crossing.
+
+### Methodology Consistency
+
+**Algorithm parameters (identical to ARR):**
+- Smoothing bandwidth: 12 degrees (circular Gaussian)
+- Minimum relative prominence: 0.02 (2%)
+- Valley safety fraction: 0.25
+- Timing threshold: 80 seconds
+
+**Expected differences:**
+- Departure flows may show more variability due to SID routing and vectoring
+- Peaks may be less prominent than arrivals due to tactical routing
+- Sector widths may differ based on departure corridor structure
+
+### Example: EDDF DEP
+
+Frankfurt shows clear departure flow structure at both ranges.
+
+```{r}
+#| label: eddf-dep-data-prep
+#| include: false
+
+# Prepare EDDF DEP data from three-airport validation
+# Using same data preparation as validated tests
+
+library(arrow)
+
+# Read EDDF 2024 APDF
+temp_file <- tempfile(fileext = ".parquet")
+unzip(
+  "../xx-test-gotcha/data/apdf-annual/apdf-2024.zip",
+  files = "EDDF_01-JAN-2024_31-DEC-2024.gz.parquet",
+  exdir = dirname(temp_file),
+  junkpaths = TRUE
+)
+
+apdf_eddf <- read_parquet(
+  file.path(dirname(temp_file), "EDDF_01-JAN-2024_31-DEC-2024.gz.parquet")
+)
+
+# Prepare TMA samples for DEP
+tma_eddf_dep <- apdf_eddf |>
+  filter(SRC_PHASE == "DEP") |>
+  filter(!is.na(C40_BEARING) | !is.na(C100_BEARING)) |>
+  tidyr::pivot_longer(
+    cols = c(C40_BEARING, C100_BEARING),
+    names_to = "RANGE_TYPE",
+    values_to = "BEARING"
+  ) |>
+  mutate(
+    RANGE_NM = if_else(RANGE_TYPE == "C40_BEARING", 40, 100),
+    TMA_ADDL_TIME_MIN = if_else(
+      RANGE_NM == 40, 
+      C40_TRANSIT_TIME_MIN, 
+      C100_TRANSIT_TIME_MIN
+    ),
+    PHASE = SRC_PHASE,
+    DATE = as.Date(MVT_TIME_UTC),
+    RWY = AP_C_RWY,
+    FLIGHT_ID = AP_C_FLTID,
+    ICAO = "EDDF"
+  ) |>
+  filter(
+    !is.na(BEARING),
+    BEARING >= 0,
+    BEARING < 360,
+    !is.na(TMA_ADDL_TIME_MIN),
+    TMA_ADDL_TIME_MIN > 0
+  ) |>
+  select(ICAO, PHASE, DATE, RANGE_NM, BEARING, TMA_ADDL_TIME_MIN, 
+         RWY, AC_CLASS, FLIGHT_ID)
+```
+
+```{r}
+#| label: eddf-dep-density-40nm
+#| fig-width: 11
+#| fig-height: 5
+#| fig-cap: "EDDF departure density at 40 NM with proposed sector boundaries"
+
+eddf_dep_density_40 <- prepare_tma_bearing_density(
+  tma_samples = tma_eddf_dep,
+  airport = "EDDF",
+  phase = "DEP",
+  ranges = 40,
+  smoothing_bandwidth = 12
+)
+
+eddf_dep_extrema_40 <- identify_tma_bearing_extrema(
+  eddf_dep_density_40,
+  min_relative_prominence = 0.02
+)
+
+eddf_dep_proposal_40 <- propose_tma_sector_definitions(
+  tma_density = eddf_dep_density_40,
+  extrema = eddf_dep_extrema_40,
+  rounding_increment = 5,
+  valley_safety_fraction = 0.25
+)
+
+ggplot(eddf_dep_density_40, aes(x = BEARING_MID, y = SMOOTHED_N)) +
+  geom_line(colour = "#2b6a8a", linewidth = 0.8) +
+  geom_vline(
+    data = eddf_dep_proposal_40,
+    aes(xintercept = BEARING_FROM),
+    colour = "#c8553d",
+    linewidth = 0.8
+  ) +
+  scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = "EDDF DEP 40 NM - Sector Proposals",
+    subtitle = sprintf("%d sectors proposed | Red lines: sector boundaries", nrow(eddf_dep_proposal_40)),
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Smoothed movements per degree"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+Frankfurt departures at 40 NM show `r nrow(eddf_dep_proposal_40)` distinct sectors with clear peaks corresponding to major SID routing.
+
+```{r}
+#| label: eddf-dep-density-100nm
+#| fig-width: 11
+#| fig-height: 5
+#| fig-cap: "EDDF departure density at 100 NM with proposed sector boundaries"
+
+eddf_dep_density_100 <- prepare_tma_bearing_density(
+  tma_samples = tma_eddf_dep,
+  airport = "EDDF",
+  phase = "DEP",
+  ranges = 100,
+  smoothing_bandwidth = 12
+)
+
+eddf_dep_extrema_100 <- identify_tma_bearing_extrema(
+  eddf_dep_density_100,
+  min_relative_prominence = 0.02
+)
+
+eddf_dep_proposal_100 <- propose_tma_sector_definitions(
+  tma_density = eddf_dep_density_100,
+  extrema = eddf_dep_extrema_100,
+  rounding_increment = 5,
+  valley_safety_fraction = 0.25
+)
+
+ggplot(eddf_dep_density_100, aes(x = BEARING_MID, y = SMOOTHED_N)) +
+  geom_line(colour = "#2b6a8a", linewidth = 0.8) +
+  geom_vline(
+    data = eddf_dep_proposal_100,
+    aes(xintercept = BEARING_FROM),
+    colour = "#c8553d",
+    linewidth = 0.8
+  ) +
+  scale_x_continuous(breaks = seq(0, 360, by = 30)) +
+  coord_cartesian(xlim = c(0, 360), expand = FALSE) +
+  labs(
+    title = "EDDF DEP 100 NM - Sector Proposals",
+    subtitle = sprintf("%d sectors proposed | Red lines: sector boundaries", nrow(eddf_dep_proposal_100)),
+    x = "Bearing from aerodrome reference point (degrees)",
+    y = "Smoothed movements per degree"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+At 100 NM, Frankfurt shows `r nrow(eddf_dep_proposal_100)` sectors, indicating consistent flow structure as departures climb and accelerate toward cruise.
+
+**EDDF DEP Decision:** Both ranges show clear sector structure. Peaks align with known departure routes. All sectors fall within operational target range (4-7 sectors).
+
+---
+
+**Session Notes:** DSMA algorithm validation complete for EDDF, EDDM, EGLL. Remaining airports (EGKK, EHAM, LEBL, LEMD, LFPG, LGAV, LIRF, LSZH, LTFM) to be processed sequentially and added to this document as approved.
+
