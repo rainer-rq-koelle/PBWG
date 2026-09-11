@@ -74,7 +74,7 @@ degrees, together with the clear `230` and `295` boundaries.
 **North treatment**: The range has a North overrun; `295-005` is the sector
 crossing North.
 
-### EGKK - London Gatwick ✅ 40NM APPROVED / 100NM SEAM PENDING
+### EGKK - London Gatwick ✅ APPROVED
 
 #### DEP 40NM - 5 sectors
 
@@ -87,16 +87,18 @@ departures changes the weighted P20 by 4 seconds; no movement exceeds the
 **North treatment**: The range has a North overrun; `320-020` is the sector
 crossing North.
 
-#### DEP 100NM - 6 selected sectors; North seam pending
+#### DEP 100NM - 6 sectors
 
-**Selected boundaries**: `000`, `070`, `130`, `195`, `280`, `315`
+**Approved boundaries**: `010`, `070`, `130`, `195`, `280`, `315`
 
 **Decision**: Merge `165`, forming `130-195` (9-second weighted pooled P20
 shift; no movement above 80 seconds), and merge `245`, forming `195-280`
 (5-second shift; no movement above 80 seconds). Retain `280`: pooling
 `245-280` with `280-315` changes the `26L / MT` reference by 139 seconds
-across 171 flights. The analyst-facing representation of the non-overrunning
-North seam remains to be selected before the definition is finalised.
+across 171 flights. Use `010` for the non-overrunning North seam: the smoothed
+density reaches its local minimum at approximately 10.5 degrees, so rounding to
+`010` retains the valley placement while avoiding an operationally awkward
+`000` cut.
 
 ### EHAM - Amsterdam Schiphol ✅ APPROVED
 
@@ -147,6 +149,170 @@ weighted P50 difference is 125 seconds, and retain the remaining clear cuts.
 
 **North treatment**: The range has a North overrun; `315-030` is the sector
 crossing North.
+
+### LEMD - Madrid Barajas ✅ APPROVED
+
+#### DEP 40NM - 5 sectors
+
+**Approved boundaries**: `080`, `145`, `215`, `245`, `340`
+
+**Decision**: Merge the connected North-side `010` and `035` wiggles into the
+`340-080` sector. Across 100,988 movements, the cumulative weighted pooled
+P20 shift is 13 seconds and 0.42% exceed the 80-second screen. Also merge
+`305`, forming `245-340`: its pooled P20 shift is 12 seconds across 51,890
+movements and only 0.03% exceed 80 seconds. Retain the clear `080`, `145`,
+`215`, and `245` valley boundaries.
+
+**North treatment**: The range has a North overrun; `340-080` is the sector
+crossing North.
+
+#### DEP 100NM - 6 sectors
+
+**Approved boundaries**: `035`, `090`, `150`, `225`, `290`, `335`
+
+**Decision**: Merge the shallow interior cuts at `055`, `190`, and `265`,
+forming `035-090`, `150-225`, and `225-290`. Their weighted pooled P20 shifts
+are 2, 8, and 16 seconds; the largest share above the 80-second screen is
+0.29%. Retain `035` and `290` because they are visually distinct valley
+boundaries, despite their otherwise small pooling impacts.
+
+**North treatment**: The range has a North overrun; `335-035` is the sector
+crossing North.
+
+### LFPG - Paris Charles de Gaulle ✅ APPROVED
+
+#### DEP 40NM - 4 sectors
+
+**Approved boundaries**: `045`, `135`, `235`, `300`
+
+**Decision**: Remove the artificial `000` seam because it bisects a continuous
+North-side flow. Pooling the resulting `300-045` North-overrun sector changes
+weighted P20 by 13 seconds and only 0.004% of affected movements exceed the
+80-second screen. Retain `045`, `135`, `235`, and `300`; in particular,
+pooling the `135` cut would move 15.1% of movements beyond 80 seconds.
+
+**North treatment**: The range has a North overrun; `300-045` is the sector
+crossing North.
+
+#### DEP 100NM - 5 sectors
+
+**Approved boundaries**: `000`, `050`, `135`, `220`, `305`
+
+**Decision**: Retain the non-overrunning `000` North seam and merge the small
+`090` and `260` interior wiggles. Each changes weighted P20 by 5 seconds,
+with only 0.031% and 0.028% of affected movements above the 80-second screen.
+The remaining cuts have stronger valley or timing evidence and are retained.
+
+### LGAV - Athens International ✅ APPROVED
+
+#### DEP 40NM - 4 sectors
+
+**Approved boundaries**: `020`, `090`, `225`, `325`
+
+**Decision**: Merge `050` and `120`, but retain `020` and `090` as sector
+balance guards. The corrected, range-specific pooling check finds no material
+timing protection at `020`; it is retained because removing it would create a
+much broader `325-090` North-overrun sector and reduce the definition to three
+sectors. Retain `225` and `325` because they preserve clear outer flow
+families.
+
+**North treatment**: The range has a North overrun; `325-020` is the sector
+crossing North.
+
+#### DEP 100NM - 5 sectors
+
+**Approved boundaries**: `040`, `095`, `160`, `225`, `325`
+
+**Decision**: Extend the North-overrun sector to `040`, merging `020` and
+`070`. Retain `095` to keep the twin-peak family legible and merge its `130`
+interior cut. Retain `160` as a timing-protected boundary: pooling the full
+`095-225` family would move 1.56% of movements beyond the 80-second screen,
+including 531 `03R / MT` movements shifted by 116 seconds. This is the useful
+future-review example of a visually modest wiggle that remains operationally
+meaningful through its reference-time behaviour.
+
+**North treatment**: The range has a North overrun; `325-040` is the sector
+crossing North.
+
+### LIRF - Rome Fiumicino ✅ APPROVED
+
+#### DEP 40NM - 7 sectors
+
+**Approved boundaries**: `010`, `040`, `095`, `130`, `205`, `260`, `320`
+
+**Decision**: Retain all seven cuts. In particular, `040` is protected by
+1.10% of affected movements shifting by more than 80 seconds when pooled;
+`095` has a 49-second weighted pooled P20 shift and a 111-second conditional
+P50 gap; and `130` is strongly protected, with 17.5% of movements above the
+80-second screen. The remaining cuts lie in clear valleys.
+
+**North treatment**: The range has a North overrun; `320-010` is the sector
+crossing North.
+
+#### DEP 100NM - 6 sectors
+
+**Approved boundaries**: `010`, `085`, `120`, `205`, `275`, `325`
+
+**Decision**: Merge only the shallow `035` interior cut, forming `010-085`;
+the weighted pooled P20 shift is 11 seconds and 0.959% of movements exceed the
+80-second screen. Retain `120`: although visually modest, pooling it changes
+P20 by 21 seconds and its conditional P50 gap is 88 seconds. Retain `325` as
+the readable valley between late-bearing flow families despite its small
+pooling impact.
+
+**North treatment**: The range has a North overrun; `325-010` is the sector
+crossing North.
+
+### LSZH - Zurich ✅ APPROVED
+
+#### DEP 40NM - 4 sectors
+
+**Approved boundaries**: `065`, `160`, `210`, `330`
+
+**Decision**: Merge `125`, joining the small 145-degree wiggle with the
+stronger 095-degree flow; its weighted pooled P20 shift is 3 seconds. Retain
+`160` to preserve the separate 180-degree flow family: it is the less safe of
+the two local joins (13-second P20 shift versus 3 seconds at `125`). Merge
+`255`, treating the visible late-bearing twin peaks as one family; its P20
+shift is 6 seconds and only 0.008% exceed 80 seconds. Replace the artificial
+`000` seam with `330`, where the smoothed density is near zero.
+
+**North treatment**: The range has a North overrun; `330-065` is the sector
+crossing North.
+
+#### DEP 100NM - 6 sectors
+
+**Approved boundaries**: `050`, `150`, `205`, `255`, `300`, `335`
+
+**Decision**: Retain all six well-separated candidate cuts. The layout is
+already balanced and has no supported merge candidate.
+
+**North treatment**: The range has a North overrun; `335-050` is the sector
+crossing North.
+
+### LTFM - Istanbul ✅ APPROVED
+
+#### DEP 40NM - 4 sectors
+
+**Approved boundaries**: `000`, `090`, `195`, `280`
+
+**Decision**: Merge the shallow `150` and `340` interior cuts. Both have
+negligible pooling impact, while `090`, `195`, and `280` lie in pronounced
+valleys. The observed `000` seam is retained because density is effectively
+zero at North.
+
+**North treatment**: No North overrun; `000` is a valid observed seam.
+
+#### DEP 100NM - 5 sectors
+
+**Approved boundaries**: `000`, `095`, `140`, `190`, `280`
+
+**Decision**: Retain the clear valleys at `095`, `140`, `190`, and `280`.
+Merge the otherwise geometrically deep `240` cut: pooling `190-240` and
+`240-280` changes the weighted P20 by 18 seconds and the conditional median by
+35 seconds, with only 0.0003% of movements exceeding the 80-second screen.
+
+**North treatment**: No North overrun; `000` is a valid observed seam.
 
 ### EGLL - London Heathrow ✅ APPROVED
 

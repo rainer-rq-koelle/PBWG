@@ -1572,8 +1572,8 @@ accepted or pooled.
 ---
 
 **Session Notes:** DSMA algorithm validation is complete for EDDF, EDDM, EGKK,
-EGLL, EHAM, and LEBL. Remaining airports (LEMD, LFPG, LGAV, LIRF, LSZH, LTFM)
-will be processed sequentially and added to this document when approved.
+EGLL, EHAM, LEBL, LEMD, LFPG, LGAV, LIRF, LSZH, and LTFM. LPPT remains
+intentionally deferred.
 
 ## Departure Sectorization (DSMA)
 
@@ -1736,8 +1736,9 @@ for (airport in dsma_airports) {
       "with a 4-second weighted P20 shift, no movements above the 80-second screen, and ",
       "a 77-second maximum shared-cell shift. At 100 NM, merge 165 and 245, forming ",
       "130-195 and 195-280. Retain 280: pooling it would change the 26L / MT reference ",
-      "by 139 seconds across 171 flights. The selected 100 NM sectorisation remains pending ",
-      "a human-readable representation of its non-overrunning North seam.\n\n",
+      "by 139 seconds across 171 flights. Use a 010-degree non-overrunning North seam: ",
+      "the smoothed density minimum is approximately 10.5 degrees, making 010 both ",
+      "human-readable and valley-safe.\n\n",
       sep = ""
     )
   }
@@ -1760,6 +1761,73 @@ for (airport in dsma_airports) {
       "retain 300 because its conditional weighted P50 difference is 86 seconds. At 100 NM, ",
       "merge 090 and 240 (19- and 26-second weighted pooled P20 shifts), while retaining ",
       "the protected 140-degree boundary.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "LEMD") {
+    cat(
+      "\n**LEMD approved DEP decision.** At 40 NM, merge the connected North-side ",
+      "010 and 035 wiggles into 340-080 (13-second weighted pooled P20 shift across ",
+      "100,988 movements) and merge 305 into 245-340 (12-second shift; 0.03% above ",
+      "80 seconds). At 100 NM, merge 055, 190, and 265, with weighted pooled P20 ",
+      "shifts of 2, 8, and 16 seconds; retain the visually distinct 035 and 290 valleys.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "LFPG") {
+    cat(
+      "\n**LFPG approved DEP decision.** At 40 NM, remove the artificial 000-degree ",
+      "seam within the continuous North-side flow, forming 300-045 (13-second weighted ",
+      "pooled P20 shift; 0.004% above 80 seconds). At 100 NM, retain the non-overrunning ",
+      "000 seam and merge the 090 and 260 interior wiggles; each has a 5-second weighted ",
+      "pooled P20 shift.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "LGAV") {
+    cat(
+      "\n**LGAV approved DEP decision.** At 40 NM, retain 020 and 090 as sector-balance ",
+      "guards while merging the 050 and 120 interiors; 020 is not a timing-protected cut. ",
+      "At 100 NM, extend the North-overrun sector to 040, retain 095 to keep the twin-peak ",
+      "family legible, and retain 160 as a timing-protected boundary: pooling 095-225 would ",
+      "move 1.56% of movements beyond 80 seconds, including 531 03R / MT movements shifted ",
+      "by 116 seconds.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "LIRF") {
+    cat(
+      "\n**LIRF approved DEP decision.** At 40 NM, retain all seven cuts; 040, 095, ",
+      "and 130 are separately timing-protected, with 130 moving 17.5% of movements beyond ",
+      "80 seconds when pooled. At 100 NM, merge only 035 into 010-085. Retain 120 despite ",
+      "its modest visual valley because pooling changes P20 by 21 seconds and its conditional ",
+      "P50 gap is 88 seconds.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "LSZH") {
+    cat(
+      "\n**LSZH approved DEP decision.** At 40 NM, merge 125 into 065-160 (3-second ",
+      "weighted pooled P20 shift), retain 160 to preserve the separate 180-degree flow ",
+      "family, merge the 255 twin-peak separator, and use a 330-degree North seam at the ",
+      "near-zero valley floor. At 100 NM, retain all six well-separated candidate cuts.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "LTFM") {
+    cat(
+      "\n**LTFM approved DEP decision.** At 40 NM, retain the clean 000-degree seam ",
+      "and the pronounced 090, 195, and 280-degree valleys; merge the shallow 150 and ",
+      "340-degree interior cuts. At 100 NM, retain 000, 095, 140, 190, and 280. Although ",
+      "240 is geometrically a deep valley, pooling 190-240 with 240-280 changes the weighted ",
+      "P20 by only 18 seconds and the conditional median by 35 seconds; it is therefore ",
+      "merged. Neither range has a North overrun.\n\n",
       sep = ""
     )
   }

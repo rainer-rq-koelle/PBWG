@@ -18,10 +18,23 @@ project_root <- normalizePath(file.path(dirname(script_path), ".."))
 devtools::load_all(project_root, quiet = TRUE)
 
 reference_year <- 2024L
-study_airports <- c(
+all_study_airports <- c(
   "EDDF", "EDDM", "EGKK", "EGLL", "EHAM", "LEBL", "LEMD",
   "LFPG", "LGAV", "LIRF", "LPPT", "LSZH", "LTFM"
 )
+requested_airports <- Sys.getenv("PBWG_DSMA_AIRPORTS", unset = "")
+study_airports <- if (nzchar(requested_airports)) {
+  trimws(strsplit(requested_airports, ",", fixed = TRUE)[[1]])
+} else {
+  all_study_airports
+}
+
+if (any(!study_airports %in% all_study_airports)) {
+  stop(
+    "Unknown PBWG_DSMA_AIRPORTS value(s): ",
+    paste(setdiff(study_airports, all_study_airports), collapse = ", ")
+  )
+}
 
 smoothing_bandwidth <- 6
 analysis_bandwidths <- c(4, 6, 8)
@@ -46,7 +59,10 @@ lppt_apdf_archive <- Sys.getenv(
   "PBWG_APDF_LPPT_2024",
   unset = "/Users/rainerkoelle/RProjects/__DATA/APDF/LPPT-apdf.zip"
 )
-output_path <- file.path(project_root, "inst", "dsma-sector-review-2024.rds")
+output_path <- Sys.getenv(
+  "PBWG_DSMA_REVIEW_OUTPUT",
+  unset = file.path(project_root, "inst", "dsma-sector-review-2024.rds")
+)
 
 study_airport_sources <- tibble::tibble(
   ICAO = study_airports,
@@ -151,9 +167,14 @@ build_boundary_utility <- function(samples, proposal, airport) {
         ICAO, RANGE_NM, CUT, PEAK_SEPARATION_DEG,
         VALLEY_TO_LOWER_PEAK_RATIO, PAIRWISE_SEPARATION,
         LEFT_SECTOR, RIGHT_SECTOR
-    ) {
+      ) {
+      # Sector labels can recur at 40 and 100 NM; pooling must stay range-specific.
       pooled_samples <- assigned_samples |>
-        filter(.data$VALID_TMA, .data$SECTOR %in% c(LEFT_SECTOR, RIGHT_SECTOR))
+        filter(
+          .data$VALID_TMA,
+          .data$RANGE_NM == .env$RANGE_NM,
+          .data$SECTOR %in% c(LEFT_SECTOR, RIGHT_SECTOR)
+        )
       sector_references <- pooled_samples |>
         summarise(
           N = n(),
