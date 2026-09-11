@@ -738,9 +738,6 @@ assign_tma_sector <- function(
 #' @param ref_start Start timestamp of the reference window.
 #' @param ref_end End timestamp of the reference window.
 #' @param variant Reference algorithm variant.
-#' @param min_n Minimum number of movements to consider a sample valid.
-#' @param keep_below_threshold When `TRUE`, keep groups below `min_n` and flag
-#'   them as invalid.
 #' @param include_unknown When `TRUE`, keep groups with unknown runway, class,
 #'   or sector.
 #'
@@ -751,8 +748,6 @@ build_tma_reference <- function(
     ref_start,
     ref_end,
     variant = c("icao_ganp_p20", "pbwg_avg_p05_p15"),
-    min_n = 5,
-    keep_below_threshold = TRUE,
     include_unknown = FALSE
 ) {
   variant <- base::match.arg(variant)
@@ -817,18 +812,12 @@ build_tma_reference <- function(
       REF_START = as.POSIXct(ref_start, tz = lubridate::tz(ref_start)),
       REF_END = as.POSIXct(ref_end, tz = lubridate::tz(ref_end)),
       REF_PERIOD = build_reference_period_label(ref_start, ref_end),
-      REF_VARIANT = variant,
-      MIN_N = min_n,
-      IS_VALID_SAMPLE = .data$N >= min_n
+      REF_VARIANT = variant
     ) |>
     dplyr::arrange(
       .data$ICAO, .data$PHASE, .data$RANGE_NM,
       .data$CLASS, .data$RWY, .data$SECTOR
     )
-
-  if (!keep_below_threshold) {
-    reference <- dplyr::filter(reference, .data$IS_VALID_SAMPLE)
-  }
 
   reference
 }
@@ -847,13 +836,13 @@ build_tma_reference <- function(
 check_tma_reference_coverage <- function(reference_data, analysis_samples = NULL) {
   stop_if_apdf_columns_missing(
     reference_data,
-    required_columns = c("ICAO", "PHASE", "RANGE_NM", "SECTOR", "IS_VALID_SAMPLE")
+    required_columns = c("ICAO", "PHASE", "RANGE_NM", "SECTOR", "N")
   )
 
   coverage <- tibble::as_tibble(reference_data) |>
     dplyr::summarise(
       N_GROUPS = dplyr::n(),
-      N_VALID_GROUPS = sum(.data$IS_VALID_SAMPLE, na.rm = TRUE),
+      N_REFERENCE_MOVEMENTS = sum(.data$N, na.rm = TRUE),
       .by = c("ICAO", "PHASE", "RANGE_NM")
     )
 
@@ -866,19 +855,17 @@ check_tma_reference_coverage <- function(reference_data, analysis_samples = NULL
     dplyr::left_join(
       dplyr::select(
         reference_data,
-        "ICAO", "PHASE", "RANGE_NM", "CLASS", "RWY", "SECTOR",
-        "IS_VALID_SAMPLE"
+        "ICAO", "PHASE", "RANGE_NM", "CLASS", "RWY", "SECTOR", "N"
       ),
       by = c("ICAO", "PHASE", "RANGE_NM", "CLASS", "RWY", "SECTOR")
     ) |>
     dplyr::mutate(
-      HAS_REFERENCE = !is.na(.data$IS_VALID_SAMPLE),
-      HAS_VALID_REFERENCE = .data$IS_VALID_SAMPLE %in% TRUE
+      HAS_REFERENCE = !is.na(.data$N)
     ) |>
     dplyr::summarise(
       N_NEEDED_GROUPS = dplyr::n(),
       N_MATCHED_GROUPS = sum(.data$HAS_REFERENCE, na.rm = TRUE),
-      N_VALID_MATCHED_GROUPS = sum(.data$HAS_VALID_REFERENCE, na.rm = TRUE),
+      N_UNMATCHED_GROUPS = sum(!.data$HAS_REFERENCE, na.rm = TRUE),
       .by = c("ICAO", "PHASE", "RANGE_NM")
     )
 
@@ -893,7 +880,6 @@ check_tma_reference_coverage <- function(reference_data, analysis_samples = NULL
 #' @param airport ICAO location indicator.
 #' @param ref_period Reference year or year range.
 #' @param variant Reference algorithm variant.
-#' @param min_n Minimum number of movements used in the validity rule.
 #' @param region Region label included in the file name.
 #' @param ext File extension without a leading dot.
 #'
@@ -903,13 +889,12 @@ build_pbwg_tma_reference_filename <- function(
     airport,
     ref_period,
     variant,
-    min_n,
     region = "EUR",
     ext = "csv"
 ) {
   stringr::str_c(
     stringr::str_c(
-      "PBWG", region, airport, "ref-tma", ref_period, variant, stringr::str_c("n", min_n, sep = ""),
+      "PBWG", region, airport, "ref-tma", ref_period, variant,
       sep = "-"
     ),
     ".",
@@ -925,7 +910,6 @@ build_pbwg_tma_reference_filename <- function(
 #' @param airport ICAO location indicator.
 #' @param ref_period Reference year or year range.
 #' @param variant Reference algorithm variant.
-#' @param min_n Minimum number of movements used in the validity rule.
 #' @param output_dir Directory where the output file will be written.
 #' @param region Region label added to the file name.
 #'
@@ -936,7 +920,6 @@ write_pbwg_tma_reference <- function(
     airport,
     ref_period,
     variant,
-    min_n,
     output_dir,
     region = "EUR"
 ) {
@@ -946,7 +929,6 @@ write_pbwg_tma_reference <- function(
     airport = airport,
     ref_period = ref_period,
     variant = variant,
-    min_n = min_n,
     region = region
   )
   output_path <- fs::path(output_dir, output_name)
@@ -976,10 +958,7 @@ write_pbwg_tma_reference <- function(
 #'   `"csv_auto"`.
 #' @param ranges Numeric vector of ranges in nautical miles to keep.
 #' @param variant Reference algorithm variant.
-#' @param min_n Minimum number of movements to consider a sample valid.
 #' @param max_tma Maximum travel time in minutes kept as a candidate sample.
-#' @param keep_below_threshold When `TRUE`, keep groups below `min_n` and flag
-#'   them as invalid.
 #' @param include_unknown When `TRUE`, keep groups with unknown runway, class,
 #'   or sector.
 #' @param region Region label included in the output file names.
@@ -996,9 +975,7 @@ create_pbwg_tma_reference_annual_file <- function(
     type = c("parquet", "csv", "csv_auto"),
     ranges = c(40, 100),
     variant = c("icao_ganp_p20", "pbwg_avg_p05_p15"),
-    min_n = 5,
     max_tma = 180,
-    keep_below_threshold = TRUE,
     include_unknown = FALSE,
     region = "EUR"
 ) {
@@ -1030,8 +1007,6 @@ create_pbwg_tma_reference_annual_file <- function(
     ref_start = ref_start,
     ref_end = ref_end,
     variant = variant,
-    min_n = min_n,
-    keep_below_threshold = keep_below_threshold,
     include_unknown = include_unknown
   )
 
@@ -1045,7 +1020,6 @@ create_pbwg_tma_reference_annual_file <- function(
         airport = airport,
         ref_period = as.character(ref_year),
         variant = variant,
-        min_n = min_n,
         output_dir = output_dir,
         region = region
       )
@@ -1063,16 +1037,13 @@ create_pbwg_tma_reference_annual_file <- function(
 #'
 #' @param tma_samples A sector-assigned sample tibble from `assign_tma_sector()`.
 #' @param reference_data A reference tibble from `build_tma_reference()`.
-#' @param valid_reference_only When `TRUE`, only references flagged with
-#'   `IS_VALID_SAMPLE` are used.
 #'
 #' @return A movement-level tibble with joined reference values and additional
 #'   terminal-airspace time.
 #' @export
 apply_tma_reference <- function(
     tma_samples,
-    reference_data,
-    valid_reference_only = TRUE
+    reference_data
 ) {
   stop_if_apdf_columns_missing(
     tma_samples,
@@ -1085,22 +1056,18 @@ apply_tma_reference <- function(
     reference_data,
     required_columns = c(
       "ICAO", "PHASE", "RANGE_NM", "CLASS", "RWY", "SECTOR",
-      "REF_TMA", "REF_VARIANT", "REF_PERIOD", "MIN_N", "IS_VALID_SAMPLE"
+      "REF_TMA", "REF_VARIANT", "REF_PERIOD", "N"
     )
   )
 
   reference_lookup <- tibble::as_tibble(reference_data)
-
-  if (valid_reference_only) {
-    reference_lookup <- dplyr::filter(reference_lookup, .data$IS_VALID_SAMPLE)
-  }
 
   tibble::as_tibble(tma_samples) |>
     dplyr::left_join(
       dplyr::select(
         reference_lookup,
         "ICAO", "PHASE", "RANGE_NM", "CLASS", "RWY", "SECTOR",
-        "REF_TMA", "REF_VARIANT", "REF_PERIOD", "MIN_N", "IS_VALID_SAMPLE"
+        "REF_TMA", "REF_VARIANT", "REF_PERIOD", REF_N = "N"
       ),
       by = c("ICAO", "PHASE", "RANGE_NM", "CLASS", "RWY", "SECTOR")
     ) |>
@@ -1182,8 +1149,6 @@ summarise_pbwg_tma_daily <- function(
 #' @param year Optional reporting year filter.
 #' @param ranges Numeric vector of ranges in nautical miles to keep.
 #' @param max_tma Maximum travel time in minutes kept as a candidate sample.
-#' @param valid_reference_only When `TRUE`, only references flagged with
-#'   `IS_VALID_SAMPLE` are used.
 #'
 #' @return A movement-level tibble with reference values and additional
 #'   terminal-airspace time.
@@ -1195,8 +1160,7 @@ prepare_apdf_tma_augmented_zip <- function(
     type = c("parquet", "csv", "csv_auto"),
     year = NULL,
     ranges = c(40, 100),
-    max_tma = 180,
-    valid_reference_only = TRUE
+    max_tma = 180
 ) {
   type <- base::match.arg(type)
   sector_definitions <- reference_to_tma_sector_definitions(reference_data)
@@ -1222,10 +1186,7 @@ prepare_apdf_tma_augmented_zip <- function(
           max_tma = max_tma
         ) |>
         assign_tma_sector(sector_definitions = sector_definitions) |>
-        apply_tma_reference(
-          reference_data = reference_data,
-          valid_reference_only = valid_reference_only
-        )
+        apply_tma_reference(reference_data = reference_data)
     }
   ) |>
     dplyr::bind_rows() |>
@@ -1252,8 +1213,6 @@ prepare_apdf_tma_augmented_zip <- function(
 #' @param year Optional reporting year filter.
 #' @param ranges Numeric vector of ranges in nautical miles to keep.
 #' @param max_tma Maximum travel time in minutes kept as a candidate sample.
-#' @param valid_reference_only When `TRUE`, only references flagged with
-#'   `IS_VALID_SAMPLE` are used.
 #' @param valid_only When `TRUE`, only movements with valid terminal-airspace
 #'   times are counted in the daily summary.
 #'
@@ -1267,7 +1226,6 @@ prepare_apdf_tma_daily_zip <- function(
     year = NULL,
     ranges = c(40, 100),
     max_tma = 180,
-    valid_reference_only = TRUE,
     valid_only = TRUE
 ) {
   prepare_apdf_tma_augmented_zip(
@@ -1277,8 +1235,7 @@ prepare_apdf_tma_daily_zip <- function(
     type = type,
     year = year,
     ranges = ranges,
-    max_tma = max_tma,
-    valid_reference_only = valid_reference_only
+    max_tma = max_tma
   ) |>
     summarise_pbwg_tma_daily(year = year, valid_only = valid_only)
 }
@@ -1469,8 +1426,6 @@ write_pbwg_tma_augmented <- function(
 #' @param ranges Numeric vector of ranges in nautical miles to keep.
 #' @param region Region label included in the output file names.
 #' @param max_tma Maximum travel time in minutes kept as a candidate sample.
-#' @param valid_reference_only When `TRUE`, only references flagged with
-#'   `IS_VALID_SAMPLE` are used.
 #' @param valid_only When `TRUE`, only movements with valid terminal-airspace
 #'   times are counted in the daily summary.
 #' @param save_augmented When `TRUE`, write the augmented movement-level data
@@ -1491,7 +1446,6 @@ create_pbwg_tma_annual_file <- function(
     ranges = c(40, 100),
     region = "EUR",
     max_tma = 180,
-    valid_reference_only = TRUE,
     valid_only = TRUE,
     save_augmented = FALSE,
     augmented_dir = output_dir
@@ -1508,8 +1462,7 @@ create_pbwg_tma_annual_file <- function(
     type = type,
     year = year,
     ranges = ranges,
-    max_tma = max_tma,
-    valid_reference_only = valid_reference_only
+    max_tma = max_tma
   )
 
   if (!base::is.null(airports)) {

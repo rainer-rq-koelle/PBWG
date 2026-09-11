@@ -12,7 +12,6 @@ prepare_apdf_tma_daily_zip(
   year = NULL,
   ranges = c(40, 100),
   max_tma = 180,
-  valid_reference_only = TRUE,
   valid_only = TRUE
 )
 }
@@ -32,9 +31,6 @@ prepare_apdf_tma_daily_zip(
 \item{ranges}{Numeric vector of ranges in nautical miles to keep.}
 
 \item{max_tma}{Maximum travel time in minutes kept as a candidate sample.}
-
-\item{valid_reference_only}{When \code{TRUE}, only references flagged with
-\code{IS_VALID_SAMPLE} are used.}
 
 \item{valid_only}{When \code{TRUE}, only movements with valid terminal-airspace
 times are counted in the daily summary.}

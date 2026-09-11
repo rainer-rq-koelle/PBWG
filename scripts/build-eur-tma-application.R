@@ -17,7 +17,6 @@ years <- 2023:2025
 ref_year <- 2024L
 ranges <- c(40, 100)
 variant <- "icao_ganp_p20"
-min_n <- 5L
 max_tma <- 180
 n_sectors <- 6L
 
@@ -152,8 +151,6 @@ reference_data <- reference_samples_assigned |>
     ref_start = ymd_hms(paste0(ref_year, "-01-01 00:00:00"), tz = "UTC"),
     ref_end = ymd_hms(paste0(ref_year, "-12-31 23:59:59"), tz = "UTC"),
     variant = variant,
-    min_n = min_n,
-    keep_below_threshold = TRUE,
     include_unknown = FALSE
   )
 
@@ -170,7 +167,6 @@ walk(
       airport = airport,
       ref_period = ref_year,
       variant = variant,
-      min_n = min_n,
       output_dir = reference_dir,
       region = "EUR"
     )
@@ -208,7 +204,6 @@ annual_outputs <- purrr::map(
           ranges = ranges,
           region = "EUR",
           max_tma = max_tma,
-          valid_reference_only = TRUE,
           valid_only = TRUE,
           save_augmented = TRUE,
           augmented_dir = path(archive_root, paste0("augmented-", year))

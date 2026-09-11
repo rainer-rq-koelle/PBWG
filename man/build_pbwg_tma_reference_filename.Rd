@@ -8,7 +8,6 @@ build_pbwg_tma_reference_filename(
   airport,
   ref_period,
   variant,
-  min_n,
   region = "EUR",
   ext = "csv"
 )
@@ -19,8 +18,6 @@ build_pbwg_tma_reference_filename(
 \item{ref_period}{Reference year or year range.}
 
 \item{variant}{Reference algorithm variant.}
-
-\item{min_n}{Minimum number of movements used in the validity rule.}
 
 \item{region}{Region label included in the file name.}
 

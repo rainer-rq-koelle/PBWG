@@ -15,9 +15,7 @@ create_pbwg_tma_reference_annual_file(
   type = c("parquet", "csv", "csv_auto"),
   ranges = c(40, 100),
   variant = c("icao_ganp_p20", "pbwg_avg_p05_p15"),
-  min_n = 5,
   max_tma = 180,
-  keep_below_threshold = TRUE,
   include_unknown = FALSE,
   region = "EUR"
 )
@@ -42,12 +40,7 @@ create_pbwg_tma_reference_annual_file(
 
 \item{variant}{Reference algorithm variant.}
 
-\item{min_n}{Minimum number of movements to consider a sample valid.}
-
 \item{max_tma}{Maximum travel time in minutes kept as a candidate sample.}
-
-\item{keep_below_threshold}{When \code{TRUE}, keep groups below \code{min_n} and flag
-them as invalid.}
 
 \item{include_unknown}{When \code{TRUE}, keep groups with unknown runway, class,
 or sector.}

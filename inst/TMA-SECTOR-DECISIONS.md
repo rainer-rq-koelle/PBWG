@@ -314,6 +314,46 @@ Merge the otherwise geometrically deep `240` cut: pooling `190-240` and
 
 **North treatment**: No North overrun; `000` is a valid observed seam.
 
+### LPPT - Lisbon ✅ APPROVED
+
+#### ARR 40NM - 5 sectors
+
+**Approved boundaries**: `060`, `120`, `185`, `240`, `325`
+
+**Decision**: Retain all five boundaries. In particular, retain `185`: pooling
+the adjacent sectors changes the weighted P20 by 25 seconds but has a
+90-second conditional median gap, including material runway 02 heavy and
+medium-jet cells.
+
+**North treatment**: The range has a North overrun; `325-060` crosses North.
+
+#### ARR 100NM - 5 sectors
+
+**Approved boundaries**: `050`, `095`, `195`, `245`, `340`
+
+**Decision**: Retain all five clear candidate boundaries.
+
+**North treatment**: The range has a North overrun; `340-050` crosses North.
+
+#### DEP 40NM - 2 sectors
+
+**Approved boundaries**: `100`, `340`
+
+**Decision**: Merge `020` and `175`. The broad `100-340` sector is supported:
+the removed 175-degree cut has a 35-second conditional median difference and a
+13-second weighted pooled P20 shift, with no further stable local minimum.
+
+**North treatment**: The range has a North overrun; `340-100` crosses North.
+
+#### DEP 100NM - 4 sectors
+
+**Approved boundaries**: `095`, `175`, `245`, `340`
+
+**Decision**: Merge `025`, `055`, and `205`; retain the timing-protected
+`095`, `175`, `245`, and `340` boundaries.
+
+**North treatment**: The range has a North overrun; `340-095` crosses North.
+
 ### EGLL - London Heathrow ✅ APPROVED
 
 #### DEP 40NM - 6 sectors

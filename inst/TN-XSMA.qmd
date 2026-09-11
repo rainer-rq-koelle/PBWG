@@ -1571,9 +1571,8 @@ accepted or pooled.
 
 ---
 
-**Session Notes:** DSMA algorithm validation is complete for EDDF, EDDM, EGKK,
-EGLL, EHAM, LEBL, LEMD, LFPG, LGAV, LIRF, LSZH, and LTFM. LPPT remains
-intentionally deferred.
+**Session Notes:** ASMA and DSMA sector validation is complete for all 13
+study airports, including LPPT.
 
 ## Departure Sectorization (DSMA)
 
@@ -1828,6 +1827,16 @@ for (airport in dsma_airports) {
       "240 is geometrically a deep valley, pooling 190-240 with 240-280 changes the weighted ",
       "P20 by only 18 seconds and the conditional median by 35 seconds; it is therefore ",
       "merged. Neither range has a North overrun.\n\n",
+      sep = ""
+    )
+  }
+
+  if (airport == "LPPT") {
+    cat(
+      "\n**LPPT approved DEP decision.** At 40 NM, merge the shallow 020 and ",
+      "175-degree interiors, retaining the timing-protected 100 and 340-degree cuts ",
+      "and the resulting 340-100 North-overrun sector. At 100 NM, merge 025, 055, ",
+      "and 205; retain 095, 175, 245, and 340.\n\n",
       sep = ""
     )
   }

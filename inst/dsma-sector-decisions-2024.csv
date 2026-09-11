@@ -127,3 +127,9 @@ LTFM,DEP,100,BRG095-140,DEP BRG095-140,2,95,140,FALSE,FALSE,APPROVED,Retain the 
 LTFM,DEP,100,BRG140-190,DEP BRG140-190,3,140,190,FALSE,FALSE,APPROVED,Retain the clear valley boundary.
 LTFM,DEP,100,BRG190-280,DEP BRG190-280,4,190,280,FALSE,FALSE,APPROVED,Merge the 240-degree interior cut; pooling changes weighted P20 by 18 seconds and the conditional median by 35 seconds.
 LTFM,DEP,100,BRG280-000,DEP BRG280-000,5,280,0,FALSE,FALSE,APPROVED,Retain the clear valley boundary and observed 000-degree seam.
+LPPT,DEP,40,BRG100-340,DEP BRG100-340,1,100,340,TRUE,FALSE,APPROVED,Merge the shallow 175-degree interior cut; conditional P50 differs by 35 seconds and the weighted pooled P20 shift is 13 seconds.
+LPPT,DEP,40,BRG340-100,DEP BRG340-100,2,340,100,TRUE,TRUE,APPROVED,North-overrun sector; merge the shallow 020-degree interior cut and retain the timing-protected 100 and 340-degree boundaries.
+LPPT,DEP,100,BRG095-175,DEP BRG095-175,1,95,175,TRUE,FALSE,APPROVED,Retain the deep valley boundary.
+LPPT,DEP,100,BRG175-245,DEP BRG175-245,2,175,245,TRUE,FALSE,APPROVED,Retain the low-volume but timing-protected boundary.
+LPPT,DEP,100,BRG245-340,DEP BRG245-340,3,245,340,TRUE,FALSE,APPROVED,Merge the shallow 205-degree interior cut; retain the boundary with material pooling impact.
+LPPT,DEP,100,BRG340-095,DEP BRG340-095,4,340,95,TRUE,TRUE,APPROVED,North-overrun sector; merge the 025 and 055-degree interior cuts.

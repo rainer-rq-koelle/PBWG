@@ -165,8 +165,7 @@ write_tma_2026p <- function(apdf_zip, airports) {
     type = "parquet",
     year = year_filter,
     ranges = c(40, 100),
-    max_tma = 180,
-    valid_reference_only = TRUE
+    max_tma = 180
   ) |>
     filter(.data$ICAO %in% tma_airports)
 

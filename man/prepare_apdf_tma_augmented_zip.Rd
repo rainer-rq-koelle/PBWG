@@ -11,8 +11,7 @@ prepare_apdf_tma_augmented_zip(
   type = c("parquet", "csv", "csv_auto"),
   year = NULL,
   ranges = c(40, 100),
-  max_tma = 180,
-  valid_reference_only = TRUE
+  max_tma = 180
 )
 }
 \arguments{
@@ -31,9 +30,6 @@ prepare_apdf_tma_augmented_zip(
 \item{ranges}{Numeric vector of ranges in nautical miles to keep.}
 
 \item{max_tma}{Maximum travel time in minutes kept as a candidate sample.}
-
-\item{valid_reference_only}{When \code{TRUE}, only references flagged with
-\code{IS_VALID_SAMPLE} are used.}
 }
 \value{
 A movement-level tibble with reference values and additional

@@ -16,7 +16,6 @@ create_pbwg_tma_annual_file(
   ranges = c(40, 100),
   region = "EUR",
   max_tma = 180,
-  valid_reference_only = TRUE,
   valid_only = TRUE,
   save_augmented = FALSE,
   augmented_dir = output_dir
@@ -44,9 +43,6 @@ create_pbwg_tma_annual_file(
 \item{region}{Region label included in the output file names.}
 
 \item{max_tma}{Maximum travel time in minutes kept as a candidate sample.}
-
-\item{valid_reference_only}{When \code{TRUE}, only references flagged with
-\code{IS_VALID_SAMPLE} are used.}
 
 \item{valid_only}{When \code{TRUE}, only movements with valid terminal-airspace
 times are counted in the daily summary.}

@@ -9,7 +9,6 @@ write_pbwg_tma_reference(
   airport,
   ref_period,
   variant,
-  min_n,
   output_dir,
   region = "EUR"
 )
@@ -22,8 +21,6 @@ write_pbwg_tma_reference(
 \item{ref_period}{Reference year or year range.}
 
 \item{variant}{Reference algorithm variant.}
-
-\item{min_n}{Minimum number of movements used in the validity rule.}
 
 \item{output_dir}{Directory where the output file will be written.}
 

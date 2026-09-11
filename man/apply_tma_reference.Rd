@@ -4,15 +4,12 @@
 \alias{apply_tma_reference}
 \title{Apply Terminal-Airspace Reference Data to APDF Samples}
 \usage{
-apply_tma_reference(tma_samples, reference_data, valid_reference_only = TRUE)
+apply_tma_reference(tma_samples, reference_data)
 }
 \arguments{
 \item{tma_samples}{A sector-assigned sample tibble from \code{assign_tma_sector()}.}
 
 \item{reference_data}{A reference tibble from \code{build_tma_reference()}.}
-
-\item{valid_reference_only}{When \code{TRUE}, only references flagged with
-\code{IS_VALID_SAMPLE} are used.}
 }
 \value{
 A movement-level tibble with joined reference values and additional

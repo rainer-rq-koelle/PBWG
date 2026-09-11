@@ -62,6 +62,7 @@ test_that("assign_tma_sector supports north-wrapping sector definitions", {
 
 test_that("approved sector definitions earmark North overrun", {
   approved <- read_approved_tma_sector_definitions(phase = "ARR")
+  approved_dep <- read_approved_tma_sector_definitions(phase = "DEP")
   eddm_wrap <- dplyr::filter(
     approved,
     .data$AIRPORT == "EDDM",
@@ -72,6 +73,13 @@ test_that("approved sector definitions earmark North overrun", {
 
   expect_true("NORTH_OVERRUN" %in% names(approved))
   expect_true(eddm_wrap$NORTH_OVERRUN[[1]])
+  expect_equal(sort(unique(approved_dep$AIRPORT)) |> length(), 13L)
+  expect_true(any(
+    approved_dep$AIRPORT == "LPPT" &
+      approved_dep$RANGE_NM == 40 &
+      approved_dep$SECTOR == "BRG340-100" &
+      approved_dep$NORTH_OVERRUN
+  ))
 })
 
 test_that("prepare_tma_sector_plot_input filters to one airport-phase-range", {
@@ -222,7 +230,7 @@ test_that("propose_tma_sector_definitions rounds valleys and reports support", {
   expect_equal(sum(support$reference_cells$N), 20L)
 })
 
-test_that("build_tma_reference supports both variants and validity flags", {
+test_that("build_tma_reference supports both variants and preserves sample sizes", {
   tma_samples <- tibble::tibble(
     ICAO = rep("EGLL", 6),
     PHASE = rep("ARR", 6),
@@ -248,22 +256,19 @@ test_that("build_tma_reference supports both variants and validity flags", {
     tma_samples = tma_samples,
     ref_start = as.POSIXct("2024-01-01 00:00:00", tz = "UTC"),
     ref_end = as.POSIXct("2024-12-31 23:59:59", tz = "UTC"),
-    variant = "icao_ganp_p20",
-    min_n = 5
+    variant = "icao_ganp_p20"
   )
 
   ref_pbwg <- build_tma_reference(
     tma_samples = tma_samples,
     ref_start = as.POSIXct("2024-01-01 00:00:00", tz = "UTC"),
     ref_end = as.POSIXct("2024-12-31 23:59:59", tz = "UTC"),
-    variant = "pbwg_avg_p05_p15",
-    min_n = 10
+    variant = "pbwg_avg_p05_p15"
   )
 
   expect_equal(ref_ganp$N, 6L)
   expect_equal(ref_ganp$SECTOR_ID, "EGLL-ARR-BRG300-060")
-  expect_true(ref_ganp$IS_VALID_SAMPLE)
-  expect_false(ref_pbwg$IS_VALID_SAMPLE)
+  expect_false("IS_VALID_SAMPLE" %in% names(ref_ganp))
   expect_true(ref_pbwg$REF_TMA < ref_ganp$REF_TMA)
 })
 
@@ -290,14 +295,14 @@ test_that("apply_tma_reference joins reference values and summarise_pbwg_tma_dai
     REF_TMA = 15,
     REF_VARIANT = "icao_ganp_p20",
     REF_PERIOD = "2024",
-    MIN_N = 5,
-    IS_VALID_SAMPLE = TRUE
+    N = 6L
   )
 
   augmented <- apply_tma_reference(tma_samples, reference_data)
   summary_data <- summarise_pbwg_tma_daily(augmented)
 
   expect_equal(augmented$REF_TMA, c(15, NA))
+  expect_equal(augmented$REF_N, c(6L, NA))
   expect_equal(augmented$ADD_TMA, c(5, NA))
   expect_equal(augmented$TMA_NA, c(FALSE, TRUE))
   expect_equal(summary_data$MVTS, 2L)
@@ -371,8 +376,7 @@ test_that("create_pbwg_tma_reference_annual_file writes airport reference files"
     output_dir = tmp_dir,
     airports = "EGLL",
     type = "csv",
-    variant = "icao_ganp_p20",
-    min_n = 5
+    variant = "icao_ganp_p20"
   )
 
   expect_true(fs::file_exists(unname(refs["EGLL"])))
@@ -408,9 +412,7 @@ test_that("create_pbwg_tma_annual_file writes daily and augmented airport files"
     REF_START = as.POSIXct(rep("2024-01-01 00:00:00", 2), tz = "UTC"),
     REF_END = as.POSIXct(rep("2024-12-31 23:59:59", 2), tz = "UTC"),
     REF_PERIOD = "2024",
-    REF_VARIANT = "icao_ganp_p20",
-    MIN_N = 5L,
-    IS_VALID_SAMPLE = TRUE
+    REF_VARIANT = "icao_ganp_p20"
   )
 
   outputs <- create_pbwg_tma_annual_file(

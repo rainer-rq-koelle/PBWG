@@ -31,8 +31,8 @@ using the valley-based sectorization algorithm.
 }
 \details{
 The approved sector definitions are stored in \verb{inst/extdata/} and loaded from
-the installed package. Currently only ARR (arrival) sectors are available.
-DEP (departure) sectors are pending approval.
+the installed package. ARR and DEP sectors were both validated against the
+2024 reference data.
 
 Sector definitions include:
 \itemize{
@@ -49,8 +49,8 @@ Sector definitions include:
 }
 \examples{
 \dontrun{
-# Load all approved ARR sectors
-arr_sectors <- read_approved_tma_sector_definitions(phase = "ARR")
+# Load all approved arrival and departure sectors
+sectors <- read_approved_tma_sector_definitions()
 
 # Load sectors for specific airports
 eddf_sectors <- read_approved_tma_sector_definitions(

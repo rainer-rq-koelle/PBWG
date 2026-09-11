@@ -16,8 +16,8 @@
 #'
 #' @details
 #' The approved sector definitions are stored in `inst/extdata/` and loaded from
-#' the installed package. Currently only ARR (arrival) sectors are available.
-#' DEP (departure) sectors are pending approval.
+#' the installed package. ARR and DEP sectors were both validated against the
+#' 2024 reference data.
 #'
 #' Sector definitions include:
 #' \itemize{
@@ -34,8 +34,8 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Load all approved ARR sectors
-#' arr_sectors <- read_approved_tma_sector_definitions(phase = "ARR")
+#' # Load all approved arrival and departure sectors
+#' sectors <- read_approved_tma_sector_definitions()
 #'
 #' # Load sectors for specific airports
 #' eddf_sectors <- read_approved_tma_sector_definitions(
@@ -82,7 +82,7 @@ read_approved_tma_sector_definitions <- function(
     file_path <- system.file("extdata", "arr-sectors-approved-2024.parquet", package = "PBWG")
 
     if (!file.exists(file_path) || !nzchar(file_path)) {
-      stop("ARR sector definitions file not found. Run scripts/export-approved-arr-sectors.R to generate it.")
+      stop("ARR sector definitions file not found. Run scripts/export-approved-tma-sectors.R to generate it.")
     }
 
     sectors <- arrow::read_parquet(file_path)
@@ -91,7 +91,7 @@ read_approved_tma_sector_definitions <- function(
     file_path <- system.file("extdata", "dep-sectors-approved-2024.parquet", package = "PBWG")
 
     if (!file.exists(file_path) || !nzchar(file_path)) {
-      stop("DEP sector definitions not yet approved. Only ARR sectors are currently available.")
+      stop("DEP sector definitions file not found. Run scripts/export-approved-tma-sectors.R to generate it.")
     }
 
     sectors <- arrow::read_parquet(file_path)

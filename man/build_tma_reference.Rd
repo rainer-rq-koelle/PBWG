@@ -9,8 +9,6 @@ build_tma_reference(
   ref_start,
   ref_end,
   variant = c("icao_ganp_p20", "pbwg_avg_p05_p15"),
-  min_n = 5,
-  keep_below_threshold = TRUE,
   include_unknown = FALSE
 )
 }
@@ -23,11 +21,6 @@ build_tma_reference(
 \item{ref_end}{End timestamp of the reference window.}
 
 \item{variant}{Reference algorithm variant.}
-
-\item{min_n}{Minimum number of movements to consider a sample valid.}
-
-\item{keep_below_threshold}{When \code{TRUE}, keep groups below \code{min_n} and flag
-them as invalid.}
 
 \item{include_unknown}{When \code{TRUE}, keep groups with unknown runway, class,
 or sector.}
