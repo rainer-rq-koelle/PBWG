@@ -750,7 +750,11 @@ build_tma_reference <- function(
     variant = c("icao_ganp_p20", "pbwg_avg_p05_p15"),
     include_unknown = FALSE
 ) {
-  variant <- base::match.arg(variant)
+  variants <- base::match.arg(
+    variant,
+    choices = c("icao_ganp_p20", "pbwg_avg_p05_p15"),
+    several.ok = TRUE
+  )
 
   stop_if_apdf_columns_missing(
     tma_samples,
@@ -795,28 +799,33 @@ build_tma_reference <- function(
     )
   }
 
-  reference <- filtered_samples |>
-    dplyr::summarise(
-      N = dplyr::n(),
-      REF_TMA = calc_tma_reference_value(.data$TMA_TIME, variant = variant),
-      SECTOR_ID = dplyr::first(.data$SECTOR_ID),
-      SECTOR_LABEL = dplyr::first(.data$SECTOR_LABEL),
-      BEARING_FROM = dplyr::first(.data$BEARING_FROM),
-      BEARING_TO = dplyr::first(.data$BEARING_TO),
-      START_ROTATION = dplyr::first(.data$START_ROTATION),
-      CUT_FROM = dplyr::first(.data$CUT_FROM),
-      CUT_TO = dplyr::first(.data$CUT_TO),
-      .by = c("ICAO", "PHASE", "RANGE_NM", "CLASS", "RWY", "SECTOR")
-    ) |>
-    dplyr::mutate(
-      REF_START = as.POSIXct(ref_start, tz = lubridate::tz(ref_start)),
-      REF_END = as.POSIXct(ref_end, tz = lubridate::tz(ref_end)),
-      REF_PERIOD = build_reference_period_label(ref_start, ref_end),
-      REF_VARIANT = variant
-    ) |>
+  reference <- purrr::map_dfr(
+    variants,
+    function(ref_variant) {
+      filtered_samples |>
+        dplyr::summarise(
+          N = dplyr::n(),
+          REF_TMA = calc_tma_reference_value(.data$TMA_TIME, variant = ref_variant),
+          SECTOR_ID = dplyr::first(.data$SECTOR_ID),
+          SECTOR_LABEL = dplyr::first(.data$SECTOR_LABEL),
+          BEARING_FROM = dplyr::first(.data$BEARING_FROM),
+          BEARING_TO = dplyr::first(.data$BEARING_TO),
+          START_ROTATION = dplyr::first(.data$START_ROTATION),
+          CUT_FROM = dplyr::first(.data$CUT_FROM),
+          CUT_TO = dplyr::first(.data$CUT_TO),
+          .by = c("ICAO", "PHASE", "RANGE_NM", "CLASS", "RWY", "SECTOR")
+        ) |>
+        dplyr::mutate(
+          REF_START = as.POSIXct(ref_start, tz = lubridate::tz(ref_start)),
+          REF_END = as.POSIXct(ref_end, tz = lubridate::tz(ref_end)),
+          REF_PERIOD = build_reference_period_label(ref_start, ref_end),
+          REF_VARIANT = ref_variant
+        )
+    }
+  ) |>
     dplyr::arrange(
       .data$ICAO, .data$PHASE, .data$RANGE_NM,
-      .data$CLASS, .data$RWY, .data$SECTOR
+      .data$CLASS, .data$RWY, .data$SECTOR, .data$REF_VARIANT
     )
 
   reference
@@ -1123,7 +1132,10 @@ summarise_pbwg_tma_daily <- function(
       TOT_REF = sum(.data$REF_TMA, na.rm = TRUE),
       TOT_ADD_TIME = sum(.data$ADD_TMA, na.rm = TRUE),
       TMA_NA = sum(.data$TMA_NA, na.rm = TRUE),
-      .by = c("ICAO", "PHASE", "RANGE_NM", "DATE")
+      .by = c(
+        "ICAO", "PHASE", "RANGE_NM", "DATE", "SECTOR", "CLASS", "RWY",
+        "REF_VARIANT", "REF_N", "HAS_REFERENCE"
+      )
     ) |>
     dplyr::arrange(.data$ICAO, .data$PHASE, .data$RANGE_NM, .data$DATE)
 

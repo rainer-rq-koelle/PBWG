@@ -270,6 +270,16 @@ test_that("build_tma_reference supports both variants and preserves sample sizes
   expect_equal(ref_ganp$SECTOR_ID, "EGLL-ARR-BRG300-060")
   expect_false("IS_VALID_SAMPLE" %in% names(ref_ganp))
   expect_true(ref_pbwg$REF_TMA < ref_ganp$REF_TMA)
+
+  ref_both <- build_tma_reference(
+    tma_samples = tma_samples,
+    ref_start = as.POSIXct("2024-01-01 00:00:00", tz = "UTC"),
+    ref_end = as.POSIXct("2024-12-31 23:59:59", tz = "UTC"),
+    variant = tma_reference_variants()$REF_VARIANT
+  )
+
+  expect_equal(nrow(ref_both), 2L)
+  expect_equal(sort(ref_both$REF_VARIANT), sort(tma_reference_variants()$REF_VARIANT))
 })
 
 test_that("apply_tma_reference joins reference values and summarise_pbwg_tma_daily aggregates totals", {
@@ -305,11 +315,12 @@ test_that("apply_tma_reference joins reference values and summarise_pbwg_tma_dai
   expect_equal(augmented$REF_N, c(6L, NA))
   expect_equal(augmented$ADD_TMA, c(5, NA))
   expect_equal(augmented$TMA_NA, c(FALSE, TRUE))
-  expect_equal(summary_data$MVTS, 2L)
-  expect_equal(summary_data$TOT_TMA_TIME, 38)
-  expect_equal(summary_data$TOT_REF, 15)
-  expect_equal(summary_data$TOT_ADD_TIME, 5)
-  expect_equal(summary_data$TMA_NA, 1L)
+  expect_equal(nrow(summary_data), 2L)
+  expect_equal(sum(summary_data$MVTS), 2L)
+  expect_equal(sum(summary_data$TOT_TMA_TIME), 38)
+  expect_equal(sum(summary_data$TOT_REF), 15)
+  expect_equal(sum(summary_data$TOT_ADD_TIME), 5)
+  expect_equal(sum(summary_data$TMA_NA), 1L)
 })
 
 test_that("write_tma_sector_diagnostic_plots writes one pdf per sector group", {
