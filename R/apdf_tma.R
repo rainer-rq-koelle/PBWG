@@ -7,6 +7,7 @@
 apdf_tma_fields <- function() {
   c(
     "AP_C_FLTID",
+    "FLTID", "FLTID_AP", "FLTID_SOURCE", "NM_MATCH_OK",
     "ADEP_ICAO", "ADES_ICAO",
     "AC_CLASS", "AP_C_RWY",
     "MVT_TIME_UTC",

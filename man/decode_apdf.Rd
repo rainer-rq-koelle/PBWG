@@ -16,5 +16,6 @@ A tibble with harmonised column names.
 }
 \description{
 Renames source columns in an APDF extract to harmonised names according to a
-dictionary.
+dictionary. If the extract already supplies \code{FLTID}, preserves that upstream
+identifier and leaves \code{AP_C_FLTID} under its original name.
 }

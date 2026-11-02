@@ -118,7 +118,7 @@ Similar flight operations are characterised by the * respective entry/exit secto
 <p>Discussion are on-going about adapting the newer groupings based on the recent recatorigation RECAT of aircraft in a pair-to-pair relationship to optimise the pairwise WTC separation.<br>
 This is currently out of scope, but from a conceptual perspective it should not influence the sectorisation identification. The newer RECAT labels being a further breakdown of the existing WTC.<br>
 It may however influence sample sizes required for the determination of the reference times.</p>
-<p>The sample size for the determination of reference times is currently set as n = 20, given that the reference period covers movement within a full year.</p>
+<p>An initial design target was 20 observations per reference subgroup, given a full-year reference period. The current implementation retains sparse groups with their sample counts; it does not enforce a blanket minimum of 20. The adequacy of a group is a reference-governance decision, separate from retaining it for diagnostic visibility.</p>
 </section>
 <section id="approach" class="level2">
 <h2 class="anchored" data-anchor-id="approach">Approach</h2>
@@ -127,6 +127,99 @@ It may however influence sample sizes required for the determination of the refe
 <section id="reference-period-governance" class="level3">
 <h3 class="anchored" data-anchor-id="reference-period-governance">Reference Period Governance</h3>
 <p>Each study establishes an agreed start reference set for its selected reference period. The 2024 set developed here is therefore specific to the current study; other studies may agree a different reference period. Once established, the study reference remains in use for subsequent analysis batches until an operational change or a new study decision requires a revised sectorisation and reference set.</p>
+</section>
+<section id="sec-reference-applicability" class="level3">
+<h3 class="anchored" data-anchor-id="sec-reference-applicability">Applying the 2024 Reference to Later Operations</h3>
+<p>The January–September 2026 refresh illustrates two different coverage questions: whether a reported movement has usable terminal-airspace observations, and whether its observed subgroup has a reference. They require different responses. Both reference variants are prepared for the same airport, phase, range, runway, aircraft-class and sector combinations. The PBWG variant is the arithmetic mean of the 5th and 15th percentile values; the ICAO-labelled variant is the 20th percentile. Missing-reference coverage is therefore common to both variants.</p>
+<section id="diagnostic-coverage-and-missing-information" class="level4">
+<h4 class="anchored" data-anchor-id="diagnostic-coverage-and-missing-information">Diagnostic coverage and missing information</h4>
+<p>Missing runway, class or crossing information is retained in the reference preparation/diagnostic process to expose coverage and data-quality issues in the reference year. An <code>NA</code>-labelled combination is a data-quality category, not a new operational combination. The current implementation can retain literal <code>"NA"</code> runway labels in reference groups. Coverage reporting must identify those groups explicitly rather than silently treating them as fully identified operations or deleting the diagnostic evidence.</p>
+<p>The number of movements supporting an ASMA/DSMA indicator can consequently be smaller than the reported arrivals/departures. A missing crossing can reflect a flight that never crosses that radius, a low-altitude/local operation, unavailable surveillance information, or an upstream association problem. Missingness alone does not identify the cause. The upstream <code>NM_MATCH_OK</code> flag checks an APDF-to-NM flight association; it does not independently validate surveillance iMatch or establish whether a crossing should exist.</p>
+<p>Monitor three quantities separately, by airport, phase, range and period:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Diagnostic</th>
+<th>Denominator</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Missing crossing or other unavailable input</td>
+<td>Reported movements in the selected population/window</td>
+<td>Observability or data-quality coverage; identify expected non-crossings where evidence permits</td>
+</tr>
+<tr class="even">
+<td>Missing reference for an otherwise usable observation</td>
+<td>Valid range-specific observations</td>
+<td>Reference-group coverage; separate unidentified groups from genuine new combinations</td>
+</tr>
+<tr class="odd">
+<td>Reference supported by few observations</td>
+<td>Reference-group sample count and affected analysis movements</td>
+<td>Precision/support issue, even when a reference is available</td>
+</tr>
+</tbody>
+</table>
+<p>The 2026 run recorded 1,958 missing-reference observations among 7,248,846 valid-labelled range observations (0.027%). The same movement can contribute at both 40 and 100 NM. These percentages must not be presented as missing-crossing rates. Monthly and daily diagnostics are needed because an annual total can hide a recent operational change. Alert thresholds and fallback rules remain to be agreed; recording a miss does not automatically authorise changing a reference.</p>
+</section>
+<section id="ltfm-runway-09-an-operational-combination-absent-in-2024" class="level4">
+<h4 class="anchored" data-anchor-id="ltfm-runway-09-an-operational-combination-absent-in-2024">LTFM runway 09: an operational combination absent in 2024</h4>
+<p>EUROCONTROL’s <a href="https://ext.eurocontrol.int/airport_corner_public/events">Airport Corner events register</a> lists the opening of LTFM runway 09 on <strong>18 September 2026</strong>. The extract first records this runway on the same date. There are 698 reported departures on runway 09 during 18–30 September; 659 have valid observations at both ranges. All 659 lack a 2024 reference at each range because runway 09 has no 2024 reference groups.</p>
+<p>The impact is local rather than uniform: at 100 NM the missing-reference share of LTFM departures is 2.86% for September, 6.72% for 18–30 September, and 20.77% on 27 September. The case represents a broader class of changes in infrastructure, procedures or traffic combinations that an unchanged historical reference cannot cover.</p>
+<p>The September observations support eight candidate runway/class/sector cells at 40 NM and ten at 100 NM. Counts range from 1 to 398 and from 6 to 257 respectively. Five of these 18 range-specific cells have fewer than 20 observations; one has only one. This is evidence for preparing a supplement, but not for automatically accepting every September-only reference value.</p>
+<p>The proposed response is a <strong>versioned supplement to the 2024 baseline</strong>, using later observations for the affected combinations. Keep the original 2024 groups unchanged and record the actual calibration period, sample size, reason and applicability date for every supplementary group. A later-data supplement must not be labelled as if its observations came from 2024. Calculate both reference variants, check the suitability of the existing sectors for the new flow, and review effects on coverage and additional-time results before adoption. A value estimated from the same movements being assessed is provisional and requires an explicit decision about its retrospective use.</p>
+<p>The calibration window, support rule, treatment of sparse cells and effective reporting period are still open. No supplementary reference has yet been applied.</p>
+</section>
+<section id="lgav-flight-geography-and-crossing-availability" class="level4">
+<h4 class="anchored" data-anchor-id="lgav-flight-geography-and-crossing-availability">LGAV: flight geography and crossing availability</h4>
+<p>For the 221,568 LGAV movements with an identifiable airport and an in-window movement timestamp, the 2026 extract contains:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Crossing availability</th>
+<th style="text-align: right;">Movements</th>
+<th style="text-align: right;">Share</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Missing 40 NM timestamp</td>
+<td style="text-align: right;">25,510</td>
+<td style="text-align: right;">11.51%</td>
+</tr>
+<tr class="even">
+<td>Missing 100 NM timestamp</td>
+<td style="text-align: right;">25,544</td>
+<td style="text-align: right;">11.53%</td>
+</tr>
+<tr class="odd">
+<td>Missing both timestamps</td>
+<td style="text-align: right;">25,500</td>
+<td style="text-align: right;">11.51%</td>
+</tr>
+<tr class="even">
+<td>40 NM present, 100 NM missing</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">0.020%</td>
+</tr>
+<tr class="odd">
+<td>100 NM present, 40 NM missing</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.005%</td>
+</tr>
+</tbody>
+</table>
+<p>Medium turboprops account for 18,855 of the missing 100 NM observations (about 74%), with substantial concentrations on Greek island services. Short flights may never cross 100 NM; low-level operations or upstream surveillance/matching coverage may also matter. However, nearly all missing timestamps here are absent at <strong>both</strong> ranges. The data therefore do not yet establish that short flight distance alone explains the pattern, particularly the missing 40 NM milestones.</p>
+<p>A focused follow-up should examine representative routes and aircraft classes, establish which radii those flights can reasonably be expected to cross, and compare milestone availability with the upstream extraction/matching rules. Escalate unexplained structural patterns to the upstream data provider with concrete examples. Do not invent crossings or adjust reference times to compensate for observations that are unavailable or not applicable.</p>
+<p>The figures above describe the 2 November 2026 refresh. Local evidence is retained in <a href="../outputs/pbwg-refresh-2026-20261102/README.md">the refresh handover</a>, including the match-coverage report, source counts and pinned manifests. The supporting crossing-availability review is in <a href="../outputs/pbwg-refresh-2026-20261102/validation/reference-coverage-review/">the coverage review folder</a>.</p>
+</section>
 </section>
 </section>
 <section id="example---egll-and-lszh" class="level2">
@@ -2183,7 +2276,7 @@ It may however influence sample sizes required for the determination of the refe
 <p>At 100 NM, Frankfurt shows 8 sectors, indicating consistent flow structure as departures climb and accelerate toward cruise.</p>
 <p><strong>EDDF DEP development finding:</strong> Both ranges show clear sector structure. The full review below applies the same evidence screen before any proposed cut is accepted or pooled.</p>
 <hr>
-<p><strong>Session Notes:</strong> DSMA algorithm validation is complete for EDDF, EDDM, EGKK, EGLL, EHAM, and LEBL. Remaining airports (LEMD, LFPG, LGAV, LIRF, LSZH, LTFM) will be processed sequentially and added to this document when approved.</p>
+<p><strong>Session Notes:</strong> ASMA and DSMA sector validation is complete for all 13 study airports, including LPPT.</p>
 </section>
 </section>
 <section id="departure-sectorization-dsma" class="level2">
@@ -2217,7 +2310,7 @@ It may however influence sample sizes required for the determination of the refe
 </section>
 <section id="egkk-dep-candidate-sector-review" class="level3">
 <h3 class="anchored" data-anchor-id="egkk-dep-candidate-sector-review">EGKK DEP Candidate Sector Review</h3>
-<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-3.png" class="img-fluid" width="1056"> <strong>EGKK DEP decision.</strong> At 40 NM, pooling the 275-degree cut forms 210-320 with a 4-second weighted P20 shift, no movements above the 80-second screen, and a 77-second maximum shared-cell shift. At 100 NM, merge 165 and 245, forming 130-195 and 195-280. Retain 280: pooling it would change the 26L / MT reference by 139 seconds across 171 flights. The selected 100 NM sectorisation remains pending a human-readable representation of its non-overrunning North seam.</p>
+<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-3.png" class="img-fluid" width="1056"> <strong>EGKK DEP decision.</strong> At 40 NM, pooling the 275-degree cut forms 210-320 with a 4-second weighted P20 shift, no movements above the 80-second screen, and a 77-second maximum shared-cell shift. At 100 NM, merge 165 and 245, forming 130-195 and 195-280. Retain 280: pooling it would change the 26L / MT reference by 139 seconds across 171 flights. Use a 010-degree non-overrunning North seam: the smoothed density minimum is approximately 10.5 degrees, making 010 both human-readable and valley-safe.</p>
 </section>
 <section id="egll-dep-candidate-sector-review" class="level3">
 <h3 class="anchored" data-anchor-id="egll-dep-candidate-sector-review">EGLL DEP Candidate Sector Review</h3>
@@ -2233,13 +2326,31 @@ It may however influence sample sizes required for the determination of the refe
 </section>
 <section id="lemd-dep-candidate-sector-review" class="level3">
 <h3 class="anchored" data-anchor-id="lemd-dep-candidate-sector-review">LEMD DEP Candidate Sector Review</h3>
-<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-7.png" class="img-fluid" width="1056"> ### LFPG DEP Candidate Sector Review</p>
-<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-8.png" class="img-fluid" width="1056"> ### LGAV DEP Candidate Sector Review</p>
-<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-9.png" class="img-fluid" width="1056"> ### LIRF DEP Candidate Sector Review</p>
-<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-10.png" class="img-fluid" width="1056"> ### LPPT DEP Candidate Sector Review</p>
-<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-11.png" class="img-fluid" width="1056"> ### LSZH DEP Candidate Sector Review</p>
-<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-12.png" class="img-fluid" width="1056"> ### LTFM DEP Candidate Sector Review</p>
-<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-13.png" class="img-fluid" width="1056"></p>
+<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-7.png" class="img-fluid" width="1056"> <strong>LEMD approved DEP decision.</strong> At 40 NM, merge the connected North-side 010 and 035 wiggles into 340-080 (13-second weighted pooled P20 shift across 100,988 movements) and merge 305 into 245-340 (12-second shift; 0.03% above 80 seconds). At 100 NM, merge 055, 190, and 265, with weighted pooled P20 shifts of 2, 8, and 16 seconds; retain the visually distinct 035 and 290 valleys.</p>
+</section>
+<section id="lfpg-dep-candidate-sector-review" class="level3">
+<h3 class="anchored" data-anchor-id="lfpg-dep-candidate-sector-review">LFPG DEP Candidate Sector Review</h3>
+<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-8.png" class="img-fluid" width="1056"> <strong>LFPG approved DEP decision.</strong> At 40 NM, remove the artificial 000-degree seam within the continuous North-side flow, forming 300-045 (13-second weighted pooled P20 shift; 0.004% above 80 seconds). At 100 NM, retain the non-overrunning 000 seam and merge the 090 and 260 interior wiggles; each has a 5-second weighted pooled P20 shift.</p>
+</section>
+<section id="lgav-dep-candidate-sector-review" class="level3">
+<h3 class="anchored" data-anchor-id="lgav-dep-candidate-sector-review">LGAV DEP Candidate Sector Review</h3>
+<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-9.png" class="img-fluid" width="1056"> <strong>LGAV approved DEP decision.</strong> At 40 NM, retain 020 and 090 as sector-balance guards while merging the 050 and 120 interiors; 020 is not a timing-protected cut. At 100 NM, extend the North-overrun sector to 040, retain 095 to keep the twin-peak family legible, and retain 160 as a timing-protected boundary: pooling 095-225 would move 1.56% of movements beyond 80 seconds, including 531 03R / MT movements shifted by 116 seconds.</p>
+</section>
+<section id="lirf-dep-candidate-sector-review" class="level3">
+<h3 class="anchored" data-anchor-id="lirf-dep-candidate-sector-review">LIRF DEP Candidate Sector Review</h3>
+<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-10.png" class="img-fluid" width="1056"> <strong>LIRF approved DEP decision.</strong> At 40 NM, retain all seven cuts; 040, 095, and 130 are separately timing-protected, with 130 moving 17.5% of movements beyond 80 seconds when pooled. At 100 NM, merge only 035 into 010-085. Retain 120 despite its modest visual valley because pooling changes P20 by 21 seconds and its conditional P50 gap is 88 seconds.</p>
+</section>
+<section id="lppt-dep-candidate-sector-review" class="level3">
+<h3 class="anchored" data-anchor-id="lppt-dep-candidate-sector-review">LPPT DEP Candidate Sector Review</h3>
+<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-11.png" class="img-fluid" width="1056"> <strong>LPPT approved DEP decision.</strong> At 40 NM, merge the shallow 020 and 175-degree interiors, retaining the timing-protected 100 and 340-degree cuts and the resulting 340-100 North-overrun sector. At 100 NM, merge 025, 055, and 205; retain 095, 175, 245, and 340.</p>
+</section>
+<section id="lszh-dep-candidate-sector-review" class="level3">
+<h3 class="anchored" data-anchor-id="lszh-dep-candidate-sector-review">LSZH DEP Candidate Sector Review</h3>
+<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-12.png" class="img-fluid" width="1056"> <strong>LSZH approved DEP decision.</strong> At 40 NM, merge 125 into 065-160 (3-second weighted pooled P20 shift), retain 160 to preserve the separate 180-degree flow family, merge the 255 twin-peak separator, and use a 330-degree North seam at the near-zero valley floor. At 100 NM, retain all six well-separated candidate cuts.</p>
+</section>
+<section id="ltfm-dep-candidate-sector-review" class="level3">
+<h3 class="anchored" data-anchor-id="ltfm-dep-candidate-sector-review">LTFM DEP Candidate Sector Review</h3>
+<p><img src="TN-XSMA_files/figure-html/full-study-departure-density-proposals-13.png" class="img-fluid" width="1056"> <strong>LTFM approved DEP decision.</strong> At 40 NM, retain the clean 000-degree seam and the pronounced 090, 195, and 280-degree valleys; merge the shallow 150 and 340-degree interior cuts. At 100 NM, retain 000, 095, 140, 190, and 280. Although 240 is geometrically a deep valley, pooling 190-240 with 240-280 changes the weighted P20 by only 18 seconds and the conditional median by 35 seconds; it is therefore merged. Neither range has a North overrun.</p>
 </section>
 <section id="proposal-register" class="level3">
 <h3 class="anchored" data-anchor-id="proposal-register">Proposal Register</h3>
@@ -2590,7 +2701,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">115</td>
 <td style="text-align: left;">Suggested merge interior</td>
-<td style="text-align: left;">Propose retain</td>
+<td style="text-align: left;">Propose merge</td>
 <td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">32</td>
@@ -2599,9 +2710,9 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">14</td>
 <td style="text-align: right;">0.42</td>
 <td style="text-align: right;">0.47</td>
-<td style="text-align: right;">0.05</td>
-<td style="text-align: left;">1.5%</td>
-<td style="text-align: right;">3.24</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: left;">0.7%</td>
+<td style="text-align: right;">3.49</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EDDF</td>
@@ -2707,9 +2818,9 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">0.35</td>
 <td style="text-align: right;">0.37</td>
-<td style="text-align: right;">0.19</td>
+<td style="text-align: right;">0.17</td>
 <td style="text-align: left;">0.0%</td>
-<td style="text-align: right;">1.06</td>
+<td style="text-align: right;">1.01</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EDDM</td>
@@ -2770,7 +2881,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">120</td>
 <td style="text-align: left;">Suggested merge interior</td>
-<td style="text-align: left;">Propose retain</td>
+<td style="text-align: left;">Propose merge</td>
 <td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">35</td>
@@ -2779,9 +2890,9 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">0.53</td>
 <td style="text-align: right;">0.57</td>
-<td style="text-align: right;">2.10</td>
-<td style="text-align: left;">30.8%</td>
-<td style="text-align: right;">12.58</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">3.01</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">EGKK</td>
@@ -2811,7 +2922,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">25</td>
 <td style="text-align: left;">67.5%</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 <td style="text-align: right;">28</td>
 <td style="text-align: right;">0.28</td>
 <td style="text-align: right;">0.28</td>
@@ -2883,7 +2994,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">25</td>
 <td style="text-align: left;">57.4%</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 <td style="text-align: right;">14</td>
 <td style="text-align: right;">0.39</td>
 <td style="text-align: right;">0.33</td>
@@ -2919,7 +3030,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">13</td>
 <td style="text-align: left;">96.7%</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">0.05</td>
 <td style="text-align: right;">0.04</td>
@@ -3022,7 +3133,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">40</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: left;">Suggested merge interior</td>
-<td style="text-align: left;">Propose retain</td>
+<td style="text-align: left;">Propose merge</td>
 <td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">28</td>
@@ -3031,9 +3142,9 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">19</td>
 <td style="text-align: right;">0.40</td>
 <td style="text-align: right;">0.40</td>
-<td style="text-align: right;">0.41</td>
-<td style="text-align: left;">4.0%</td>
-<td style="text-align: right;">3.30</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: left;">0.1%</td>
+<td style="text-align: right;">2.56</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LGAV</td>
@@ -3094,7 +3205,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">100</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: left;">Suggested merge interior</td>
-<td style="text-align: left;">Propose retain</td>
+<td style="text-align: left;">Propose merge</td>
 <td style="text-align: left;">Merge</td>
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">35</td>
@@ -3103,9 +3214,9 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: right;">17</td>
 <td style="text-align: right;">0.97</td>
 <td style="text-align: right;">1.25</td>
-<td style="text-align: right;">1.01</td>
-<td style="text-align: left;">11.3%</td>
-<td style="text-align: right;">12.24</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: left;">0.1%</td>
+<td style="text-align: right;">3.72</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">LGAV</td>
@@ -3117,7 +3228,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">22</td>
 <td style="text-align: left;">56.6%</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 <td style="text-align: right;">18</td>
 <td style="text-align: right;">0.43</td>
 <td style="text-align: right;">0.48</td>
@@ -3171,7 +3282,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">27</td>
 <td style="text-align: left;">76.7%</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 <td style="text-align: right;">19</td>
 <td style="text-align: right;">0.85</td>
 <td style="text-align: right;">0.89</td>
@@ -3243,7 +3354,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">39</td>
 <td style="text-align: left;">74.8%</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 <td style="text-align: right;">13</td>
 <td style="text-align: right;">0.74</td>
 <td style="text-align: right;">1.31</td>
@@ -3279,7 +3390,7 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">Shallow valley</td>
 <td style="text-align: right;">34</td>
 <td style="text-align: left;">69.2%</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 <td style="text-align: right;">6</td>
 <td style="text-align: right;">0.20</td>
 <td style="text-align: right;">0.16</td>
@@ -5727,6 +5838,60 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">North-overrun sector.</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">EGKK</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG010-070</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Use the 010-degree seam at the observed local North valley floor; retain the clear candidate boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EGKK</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG070-130</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear candidate boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">EGKK</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG130-195</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 165-degree cut; weighted pooled P20 shift is 9 seconds with no movements above an 80-second shift.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EGKK</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG195-280</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 245-degree cut; weighted pooled P20 shift is 5 seconds with no movements above an 80-second shift.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">EGKK</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG280-315</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the 280-degree cut; pooling it changes the 26L MT reference by 139 seconds across 171 flights.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EGKK</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG315-010</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Use the 010-degree seam at the observed local North valley floor; the range does not overrun North.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">EHAM</td>
 <td style="text-align: right;">40</td>
 <td style="text-align: left;">BRG350-070</td>
@@ -6031,6 +6196,609 @@ It may however influence sample sizes required for the determination of the refe
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">APPROVED</td>
 <td style="text-align: left;">North-overrun sector.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG080-145</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG145-215</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG215-245</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG245-340</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 305-degree cut; pooling changes weighted P20 by 12 seconds and only 0.03 percent of 51890 movements exceed an 80-second shift.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG340-080</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 010 and 035-degree North-side wiggles; pooling changes weighted P20 by 13 seconds and 0.42 percent of 100988 movements exceed an 80-second shift.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG035-090</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the 035-degree valley and merge the 055-degree interior cut; pooling changes weighted P20 by 2 seconds.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG090-150</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG150-225</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 190-degree cut; pooling changes weighted P20 by 8 seconds and 0.29 percent of movements exceed an 80-second shift.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG225-290</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 265-degree cut; pooling changes weighted P20 by 16 seconds and no movements exceed an 80-second shift.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG290-335</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the visually distinct 290-degree valley.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LEMD</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG335-035</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">North-overrun sector; retain the visually distinct 035-degree valley.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG045-135</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG135-235</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the protected boundary; pooling changes more than 15 percent of affected movements by over 80 seconds.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG235-300</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the protected boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG300-045</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the artificial 000-degree seam within the continuous North-side flow; pooling changes weighted P20 by 13 seconds and 0.004 percent of movements exceed an 80-second shift.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG000-050</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear non-overrunning North seam and 050-degree boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG050-135</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 090-degree cut; pooling changes weighted P20 by 5 seconds and 0.031 percent of movements exceed an 80-second shift.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG135-220</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the protected boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG220-305</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 260-degree cut; pooling changes weighted P20 by 5 seconds and 0.028 percent of movements exceed an 80-second shift.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LFPG</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG305-000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear non-overrunning North seam.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG020-090</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the 020-degree balance guard and merge 050; this avoids a 325-090 North-overrun sector while preserving four readable sectors.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG090-225</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the 090-degree valley boundary for sector balance and merge the 120-degree interior cut.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG225-325</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the timing-protected boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG325-020</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">North-overrun sector; retain 020 for balance rather than a timing-protection claim.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG040-095</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Use 040 as the North-overrun edge and merge the 020 and 070 interior cuts.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG095-160</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain 095 to keep the twin-peak family legible and merge the 130-degree interior cut.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG160-225</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the meaningful timing boundary; pooling 095-225 shifts 1.56 percent of movements by more than 80 seconds including 531 03R MT movements by 116 seconds.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG225-325</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the timing-protected boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LGAV</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG325-040</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">North-overrun sector; extending it to 040 has a low range-specific pooling impact.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG010-040</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the timing-protected boundary; pooling shifts 1.10 percent of affected movements by more than 80 seconds.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG040-095</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the timing-distinct boundary; weighted pooled P20 shift is 49 seconds and conditional P50 gap is 111 seconds.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG095-130</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the strongly protected boundary; pooling shifts 17.5 percent of movements by more than 80 seconds.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG130-205</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the strongly protected boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG205-260</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG260-320</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG320-010</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">North-overrun sector with a 010-degree valley seam.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG010-085</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the shallow 035-degree interior cut; weighted pooled P20 shift is 11 seconds and 0.959 percent of movements exceed an 80-second shift.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG085-120</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the timing-protected boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG120-205</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the local valley boundary; pooling shifts P20 by 21 seconds and conditional P50 differs by 88 seconds.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG205-275</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG275-325</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIRF</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG325-010</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">North-overrun sector; retain 325 as a visually meaningful valley between late-bearing flow families.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG065-160</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 125-degree cut; pooling changes weighted P20 by 3 seconds and joins the small 145-degree wiggle with the stronger 095-degree peak.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG160-210</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the 160-degree boundary; it better separates the 180-degree flow family than merging it with the preceding wiggle.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG210-330</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 255-degree twin-peak separator; pooling changes weighted P20 by 6 seconds and only 0.008 percent of movements exceed an 80-second shift.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG330-065</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Use the 330-degree North seam at the observed near-zero valley floor.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG050-150</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG150-205</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG205-255</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG255-300</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the timing-protected boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG300-335</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the timing-protected boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LSZH</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG335-050</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">North-overrun sector with a 050-degree valley edge.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG000-090</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary at 090 degrees.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG090-195</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the shallow 150-degree interior cut; pooling impact is negligible.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG195-280</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG280-000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the shallow 340-degree interior cut and retain the observed 000-degree seam.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG000-095</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG095-140</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG140-190</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG190-280</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the 240-degree interior cut; pooling changes weighted P20 by 18 seconds and the conditional median by 35 seconds.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LTFM</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG280-000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the clear valley boundary and observed 000-degree seam.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG100-340</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the shallow 175-degree interior cut; conditional P50 differs by 35 seconds and the weighted pooled P20 shift is 13 seconds.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">BRG340-100</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">North-overrun sector; merge the shallow 020-degree interior cut and retain the timing-protected 100 and 340-degree boundaries.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG095-175</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the deep valley boundary.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG175-245</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Retain the low-volume but timing-protected boundary.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG245-340</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">Merge the shallow 205-degree interior cut; retain the boundary with material pooling impact.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LPPT</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: left;">BRG340-095</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">APPROVED</td>
+<td style="text-align: left;">North-overrun sector; merge the 025 and 055-degree interior cuts.</td>
 </tr>
 </tbody>
 </table>

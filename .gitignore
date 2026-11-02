@@ -45,6 +45,10 @@ docs/
 
 # Generated analysis outputs belong in PBWG-data, not the package repo
 outputs/
+.tmp/
+backups/
+*.pptx.inspect.ndjson
+deliverables/*/
 
 # translation temp files
 po/*~

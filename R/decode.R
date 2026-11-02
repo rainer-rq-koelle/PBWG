@@ -82,7 +82,8 @@ decode_nm_flights <- function(data, dictionary = nm_flights_dictionary()) {
 #' Decode APDF Columns
 #'
 #' Renames source columns in an APDF extract to harmonised names according to a
-#' dictionary.
+#' dictionary. If the extract already supplies `FLTID`, preserves that upstream
+#' identifier and leaves `AP_C_FLTID` under its original name.
 #'
 #' @param data A tibble containing source data.
 #' @param dictionary A tibble with `SOURCE_NAME` and `TARGET_NAME`.
@@ -90,6 +91,13 @@ decode_nm_flights <- function(data, dictionary = nm_flights_dictionary()) {
 #' @return A tibble with harmonised column names.
 #' @export
 decode_apdf <- function(data, dictionary = apdf_dictionary()) {
+  # New upstream extracts already provide the NM-standardised identifier.
+  # Keep it (including its explicit missing values) and the airport original.
+  # Older extracts still use the original AP_C_FLTID -> FLTID mapping.
+  if ("FLTID" %in% names(data)) {
+    dictionary <- dictionary[!(dictionary$SOURCE_NAME == "AP_C_FLTID" &
+                                dictionary$TARGET_NAME == "FLTID"), ]
+  }
   decode_columns(data = data, dictionary = dictionary)
 }
 

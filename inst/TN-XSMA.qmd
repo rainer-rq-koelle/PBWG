@@ -31,7 +31,11 @@ This is currently out of scope, but from a conceptual perspective it should not 
 The newer RECAT labels being a further breakdown of the existing WTC.   
 It may however influence sample sizes required for the determination of the reference times.
 
-The sample size for the determination of reference times is currently set as n = 20, given that the reference period covers movement within a full year.
+An initial design target was 20 observations per reference subgroup, given a
+full-year reference period. The current implementation retains sparse groups
+with their sample counts; it does not enforce a blanket minimum of 20. The
+adequacy of a group is a reference-governance decision, separate from retaining
+it for diagnostic visibility.
 
 
 ## Approach
@@ -49,6 +53,115 @@ other studies may agree a different reference period. Once established, the
 study reference remains in use for subsequent analysis batches until an
 operational change or a new study decision requires a revised sectorisation and
 reference set.
+
+### Applying the 2024 Reference to Later Operations {#sec-reference-applicability}
+
+The January–September 2026 refresh illustrates two different coverage questions:
+whether a reported movement has usable terminal-airspace observations, and
+whether its observed subgroup has a reference. They require different responses.
+Both reference variants are prepared for the same airport, phase, range, runway,
+aircraft-class and sector combinations. The PBWG variant is the arithmetic mean
+of the 5th and 15th percentile values; the ICAO-labelled variant is the 20th
+percentile. Missing-reference coverage is therefore common to both variants.
+
+#### Diagnostic coverage and missing information
+
+Missing runway, class or crossing information is retained in the reference
+preparation/diagnostic process to expose coverage and data-quality issues in the
+reference year. An `NA`-labelled combination is a data-quality category, not a
+new operational combination. The current implementation can retain literal
+`"NA"` runway labels in reference groups. Coverage reporting must identify those
+groups explicitly rather than silently treating them as fully identified
+operations or deleting the diagnostic evidence.
+
+The number of movements supporting an ASMA/DSMA indicator can consequently be
+smaller than the reported arrivals/departures. A missing crossing can reflect a
+flight that never crosses that radius, a low-altitude/local operation, unavailable
+surveillance information, or an upstream association problem. Missingness alone
+does not identify the cause. The upstream `NM_MATCH_OK` flag checks an APDF-to-NM
+flight association; it does not independently validate surveillance iMatch or
+establish whether a crossing should exist.
+
+Monitor three quantities separately, by airport, phase, range and period:
+
+| Diagnostic | Denominator | Interpretation |
+| --- | --- | --- |
+| Missing crossing or other unavailable input | Reported movements in the selected population/window | Observability or data-quality coverage; identify expected non-crossings where evidence permits |
+| Missing reference for an otherwise usable observation | Valid range-specific observations | Reference-group coverage; separate unidentified groups from genuine new combinations |
+| Reference supported by few observations | Reference-group sample count and affected analysis movements | Precision/support issue, even when a reference is available |
+
+The 2026 run recorded 1,958 missing-reference observations among 7,248,846
+valid-labelled range observations (0.027%). The same movement can contribute
+at both 40 and 100 NM. These percentages must not be presented as missing-crossing
+rates. Monthly and daily diagnostics are needed because an annual total can
+hide a recent operational change. Alert thresholds and fallback rules remain to
+be agreed; recording a miss does not automatically authorise changing a reference.
+
+#### LTFM runway 09: an operational combination absent in 2024
+
+EUROCONTROL's [Airport Corner events register](https://ext.eurocontrol.int/airport_corner_public/events)
+lists the opening of LTFM runway 09 on **18 September 2026**. The extract first
+records this runway on the same date. There are 698 reported departures on runway
+09 during 18–30 September; 659 have valid observations at both ranges. All 659
+lack a 2024 reference at each range because runway 09 has no 2024 reference groups.
+
+The impact is local rather than uniform: at 100 NM the missing-reference share
+of LTFM departures is 2.86% for September, 6.72% for 18–30 September, and 20.77%
+on 27 September. The case represents a broader class of changes in infrastructure,
+procedures or traffic combinations that an unchanged historical reference cannot
+cover.
+
+The September observations support eight candidate runway/class/sector cells at
+40 NM and ten at 100 NM. Counts range from 1 to 398 and from 6 to 257 respectively.
+Five of these 18 range-specific cells have fewer than 20 observations; one has
+only one. This is evidence for preparing a supplement, but not for automatically
+accepting every September-only reference value.
+
+The proposed response is a **versioned supplement to the 2024 baseline**, using
+later observations for the affected combinations. Keep the original 2024 groups
+unchanged and record the actual calibration period, sample size, reason and
+applicability date for every supplementary group. A later-data supplement must
+not be labelled as if its observations came from 2024. Calculate both reference
+variants, check the suitability of the existing sectors for the new flow, and
+review effects on coverage and additional-time results before adoption. A value
+estimated from the same movements being assessed is provisional and requires an
+explicit decision about its retrospective use.
+
+The calibration window, support rule, treatment of sparse cells and effective
+reporting period are still open. No supplementary reference has yet been applied.
+
+#### LGAV: flight geography and crossing availability
+
+For the 221,568 LGAV movements with an identifiable airport and an in-window
+movement timestamp, the 2026 extract contains:
+
+| Crossing availability | Movements | Share |
+| --- | ---: | ---: |
+| Missing 40 NM timestamp | 25,510 | 11.51% |
+| Missing 100 NM timestamp | 25,544 | 11.53% |
+| Missing both timestamps | 25,500 | 11.51% |
+| 40 NM present, 100 NM missing | 44 | 0.020% |
+| 100 NM present, 40 NM missing | 10 | 0.005% |
+
+Medium turboprops account for 18,855 of the missing 100 NM observations (about
+74%), with substantial concentrations on Greek island services. Short flights
+may never cross 100 NM; low-level operations or upstream surveillance/matching
+coverage may also matter. However, nearly all missing timestamps here are absent
+at **both** ranges. The data therefore do not yet establish that short flight
+distance alone explains the pattern, particularly the missing 40 NM milestones.
+
+A focused follow-up should examine representative routes and aircraft classes,
+establish which radii those flights can reasonably be expected to cross, and
+compare milestone availability with the upstream extraction/matching rules.
+Escalate unexplained structural patterns to the upstream data provider with
+concrete examples. Do not invent crossings or adjust reference times to compensate
+for observations that are unavailable or not applicable.
+
+The figures above describe the 2 November 2026 refresh. Local evidence is retained
+in [the refresh handover](../outputs/pbwg-refresh-2026-20261102/README.md), including
+the match-coverage report, source counts and pinned manifests. The supporting
+crossing-availability review is in
+[the coverage review folder](../outputs/pbwg-refresh-2026-20261102/validation/reference-coverage-review/).
 
 
 ## Example - EGLL and LSZH

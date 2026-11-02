@@ -42,6 +42,7 @@ read_apdf_zip <- function(zipped_archive_path, files = NULL, type = c("parquet",
 apdf_traffic_fields <- function() {
   c(
     "AP_C_FLTID",
+    "FLTID", "FLTID_AP", "FLTID_SOURCE", "NM_MATCH_OK",
     "ADEP_ICAO", "ADES_ICAO",
     "AP_C_REG", "ARCTYP", "AC_CLASS",
     "AP_C_RWY", "AP_C_STND",

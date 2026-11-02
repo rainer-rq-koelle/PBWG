@@ -1,0 +1,213 @@
+---
+title: "ASMA / DSMA coverage review"
+subtitle: "Fixed 2024 references · 13 airports · 2024–September 2026"
+date: "2026-11-02"
+format:
+  html:
+    embed-resources: true
+    toc: true
+    theme: cosmo
+    code-fold: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(dplyr)
+library(readr)
+library(tidyr)
+read <- function(name) read_csv(name, show_col_types = FALSE)
+release <- read("reference-release-summary.csv")
+summary <- read("application-coverage-summary.csv")
+periods <- read("coverage-period-detail.csv")
+monthly <- read("coverage-monthly.csv")
+exceptions <- read("exception-register.csv")
+checks <- read("validation-checks.csv")
+jansep <- summary |> filter(COHORT == "ARCHIVE_SNAPSHOT", PERIOD == "JAN_SEP")
+tab <- function(x, digits=2) knitr::kable(x, digits=digits, format.args=list(big.mark=","))
+```
+
+## Review scope and decisions
+
+**Priority finding:** LTFM departures in September 2024 lack 40 NM crossing times
+for **65.87%** of observations and 100 NM crossing times for **61.58%**, throughout
+the month. Both the original reference inputs and current archive show the gap.
+This requires a reference-period coverage review before clearing representativeness.
+
+Two additional support issues merit review: LFPG departure use of reference groups
+with fewer than 20 observations reaches **8.94%** in August 2025; LTFM reaches
+**7.58%** in February 2025 and remains elevated in 2026. These are successful
+matches to thin reference samples, which a reference-miss summary alone would hide.
+
+Across the common January–September windows, missing-crossing shares are lower in
+2026 than in 2024 at every airport; there is no general deterioration on that measure.
+LGAV remains near 11–12%. Runway 09 at LTFM remains the main confirmed new-reference
+gap in 2026, with supplementation deferred.
+
+This review covers the original 2024 reference inputs and the manifest-pinned
+archive extracts for 2024, 2025 and January–September 2026. **2026 stops at
+30 September**, despite this review being prepared in November. Full-year 2024
+and 2025 summaries are retained; January–September is the common comparison
+window. Available dates do not certify complete movement reporting.
+
+The reference values, sector definitions, production eligibility and existing
+additional-time outputs are unchanged. PBWG `(p05 + p15) / 2` and ICAO-labelled
+`p20` use identical reference keys and sample counts, verified here; these
+coverage results therefore apply to both variants.
+
+The exception register records evidence, interpretation and next steps. Its
+statuses are review decisions, not automated publication approval. No new
+runway baseline has been estimated in this review.
+
+## Read the denominators first
+
+- **Reported observations** are airport movements expanded to 40 and 100 NM.
+  Combined tables therefore count each movement twice. They are not unique-flight
+  counts. Detailed tables separate arrivals/departures and each range.
+- The date is the UTC movement date, falling back to block date if the movement
+  time is missing. Unknown-phase, undated and out-of-window records remain in
+  [the input inventory](input-inventory.csv), outside the corresponding sample.
+- **Missing crossing %** uses all reported observations. Absence can reflect
+  actual non-crossing or unavailable data; it is not automatically a data error.
+- **Data attention %** counts the union of unidentified runway/class/airport,
+  absent movement timestamp, invalid travel-time direction/duration, and missing
+  bearing where a crossing time exists. Helicopter exclusion alone is not a data
+  error. These flags can overlap crossing gaps and must not be added to them.
+- **Reference miss %** uses algorithm-valid observations as denominator. Its
+  identified and unidentified components remain separate. A valid-looking
+  unmatched key is a candidate operational change, not proof of one.
+- **Matched coverage %** uses all reported observations. Literal `NA` runway
+  categories retain current production behavior: some match diagnostic reference
+  cells. Their counts are disclosed separately; matching does not establish that
+  the operational subgroup is identified.
+- **Sparse-reference exposure %** uses matched observations as denominator.
+  Cells with fewer than 5 or 20 reference observations are retained. Twenty is a
+  design target, not an enforced eligibility threshold.
+
+Screening bands are **LOW <2%; WATCH 2–<5%; REVIEW 5–<10%; SUBSTANTIAL ≥10%**.
+They draw attention to rates, with no automatic pass/fail. A small annual rate
+can conceal a material local episode. Expected non-crossings need explanation,
+not forced matching or imputation. All percentages below are calculated from
+summed counts, never averages of subgroup percentages.
+
+## 2024 reference release summary
+
+This uses the original reference-building extracts. Zero in-sample reference
+misses are expected and do not establish adequacy on their own. Coverage,
+diagnostic categories and sparse-cell exposure still require review. The saved
+release status is `COVERAGE_REVIEW_PENDING`, a new coverage-review status rather
+than a revocation of the existing reference run.
+
+```{r}
+tab(release |> transmute(Airport=ICAO, `Reported × range`=N_REPORTED,
+  `Matched %`=PCT_MATCHED_REPORTED, `Crossing absent %`=PCT_MISSING_CROSSING,
+  `Data attention %`=PCT_DATA_ATTENTION, Groups=N_REFERENCE_GROUPS,
+  `Groups N<20`=N_GROUPS_LT20, `Exposure N<20 %`=PCT_SMALL_REF_20_MATCHED))
+```
+
+[Compact release CSV](reference-release-summary.csv) ·
+[Release by phase/range](reference-release-detail.csv) ·
+[Reference-cell counts](reference-cell-support.csv)
+
+## Comparable January–September trends
+
+### Missing crossing time
+
+```{r}
+trend <- function(field) {
+ jansep |> select(ICAO,YEAR,all_of(field)) |>
+  pivot_wider(names_from=YEAR, values_from=all_of(field)) |>
+  mutate(`2026 − 2024 (pp)`=.data[["2026"]]-.data[["2024"]]) |> rename(Airport=ICAO)
+}
+tab(trend("PCT_MISSING_CROSSING"))
+```
+
+### Data-attention flags
+
+```{r}
+tab(trend("PCT_DATA_ATTENTION"))
+```
+
+### Missing reference among valid observations
+
+```{r}
+tab(trend("PCT_MISS_VALID"), digits=3)
+```
+
+### Exposure to reference groups with fewer than 20 observations
+
+```{r}
+tab(trend("PCT_SMALL_REF_20_MATCHED"))
+```
+
+For separate ASMA/DSMA and 40/100 NM results use the
+[period detail](coverage-period-detail.csv). The
+[monthly table](coverage-monthly.csv) provides all rates, numerators, denominators
+and screening bands; [daily reference misses](missing-reference-daily.csv) and
+[unmatched groups](missing-reference-groups.csv) support local investigations.
+
+## Full available-year overview
+
+<details>
+<summary>Expand the full-year 2024/2025 and available-2026 table</summary>
+
+Full-year 2024 and 2025 are shown alongside January–September 2026 for completeness.
+Use the common-window tables above when interpreting changes over time.
+
+```{r}
+tab(summary |> filter(COHORT=="ARCHIVE_SNAPSHOT", PERIOD=="AVAILABLE_YEAR") |>
+ arrange(ICAO,YEAR) |> transmute(Airport=ICAO,Year=YEAR,Through=WINDOW_END,
+ `Reported × range`=N_REPORTED, `Matched %`=PCT_MATCHED_REPORTED,
+ `Crossing absent %`=PCT_MISSING_CROSSING, `Reference miss %`=PCT_MISS_VALID),digits=3)
+```
+
+</details>
+
+## Exception register
+
+```{r}
+tab(exceptions |> select(ID=EXCEPTION_ID,Airport=AIRPORT,Issue=TITLE,Status=STATUS))
+```
+
+```{r}
+#| results: asis
+for (i in seq_len(nrow(exceptions))) {
+ e <- exceptions[i,]
+ cat("\n### ",e$EXCEPTION_ID," — ",e$TITLE,"\n\n",sep="")
+ cat("**Scope:** ",e$AIRPORT,"; ",e$PERIOD,". **Status:** ",e$STATUS,".\n\n",sep="")
+ cat(e$EVIDENCE,"\n\n",e$INTERPRETATION,"\n\n",sep="")
+ cat("**Treatment and next step:** ",e$ACTION,"\n\n",sep="")
+ cat("Evidence: ",e$SOURCE,"\n\n",sep="")
+}
+```
+
+[Download the exception register](exception-register.csv). Entries distinguish
+observations from causal explanations; review dates and ownership can be added
+when individual issues are assigned.
+
+## Verification and provenance
+
+```{r}
+tab(checks)
+```
+
+Source object/member paths, upstream metadata and verified MD5 values are retained
+in [sources.csv](sources.csv). The pinned [upstream manifest](upstream-apdf-manifest.csv),
+[reference run manifest](reference-run-manifest.csv), [code hashes](code-and-method.csv),
+[session information](session-info.txt) and [input inventory](input-inventory.csv)
+make the review traceable. MD5 checks transfer consistency, not authenticity.
+
+The [source-vintage comparison](reference-source-vintage-comparison.csv) shows
+**zero differences** in the six checked count measures for all 52 original-versus-
+archived 2024 airport/phase/range cells. This is aggregate coverage agreement,
+not a claim that every source field or identifier is unchanged.
+
+The current archived 2024 extract is deliberately separate from the original
+reference-input cohort. Any differences are treated as source-vintage effects
+until investigated. Temporal comparisons use the same archive snapshot across
+2024–2026; references remain those built from the original 2024 inputs.
+
+See also the [ASMA/DSMA technical note](../../inst/TN-XSMA.html#sec-reference-applicability)
+for the LTFM and LGAV case studies.
